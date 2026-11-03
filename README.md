@@ -216,7 +216,7 @@ flowchart LR
 | **3D Backbone** | 8 slices · 32 base channels · GroupNorm | Improve cross-slice context and stabilize small-batch training |
 | **Graph Representation** | 128 nodes · KNN `k=4` | Reduce graph computation while preserving the 8-slice depth structure |
 | **Message Passing** | 2× GraphConv + residual connections | Aggregate relational context while preserving node features |
-| **Graph Filtering** | GFT + Frequency SE | Adapt graph-frequency contributions before propagation |
+| **Structural Filtering** | GFT + Frequency SE | Adapt graph-frequency contributions before propagation |
 
 ### Technical Highlights
 
