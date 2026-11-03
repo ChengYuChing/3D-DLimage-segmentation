@@ -6,7 +6,7 @@ The shared backbone was selected **before** introducing graph modules so downstr
 
 ## 1. Backbone Configuration Selection
 
-Two integrated backbone configurations were compared using the same 45-vessel evaluation set, separate from the reserved final test sets.
+Two integrated backbone configurations were compared using a **dedicated 45-vessel configuration-selection set**, separate from the reserved final test sets.
 
 | Component | Previous | Selected |
 |---|---:|---:|
@@ -120,7 +120,7 @@ This creates a controlled architecture progression instead of comparing unrelate
 
 - Selected the backbone on a **separate configuration-selection split** before final model evaluation.
 - Increased input depth from **5 to 8 slices** to expose the model to longer longitudinal context.
-- Used **GroupNorm** to avoid relying on unstable mini-batch statistics in batch-size-2 3D training.
+- Used **GroupNorm** so normalization does not depend on mini-batch statistics during batch-size-2 3D training.
 - Preserved the depth axis during encoder pooling with `(2, 2, 1)`.
 - Combined **ASPP + depth-dilated Conv3D** to capture both multi-scale spatial context and cross-slice context.
 - Fixed the selected backbone across downstream graph models to support controlled architecture comparisons.
