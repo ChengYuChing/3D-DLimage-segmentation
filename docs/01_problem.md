@@ -2,47 +2,45 @@
 
 ## Objective
 
-The project focuses on **3D segmentation of coronary calcification in intravascular optical coherence tomography (IVOCT)**.
+This project focuses on **3D segmentation of coronary calcification in intravascular optical coherence tomography (IVOCT)**.
 
-The engineering goal was not only to improve overlap metrics, but to design a segmentation system that remains reliable across difficult imaging conditions where lesion appearance, tissue depth, and local artifacts can substantially change the visual signal.
+The goal was to build a segmentation system that could work reliably across difficult OCT cases, not just improve one overlap metric.
 
 ---
 
 ## Why This Problem Is Difficult
 
-### 1. Low-contrast and incomplete boundaries
+### 1. Unclear lesion boundaries
 
-Calcified regions do not always present a sharp, continuous boundary. Deep or weakly contrasted lesions can blend into surrounding tissue, making pixel-level delineation difficult even when the lesion is visually present.
+Calcified regions do not always have sharp and complete boundaries. Some lesions blend into nearby tissue, which makes pixel-level segmentation difficult.
 
-### 2. Signal attenuation with tissue depth
+### 2. Weaker signals in deeper tissue
 
-OCT signal quality decreases in deeper tissue. This creates a depth-dependent segmentation challenge in which the same anatomical structure can have very different visibility depending on its location.
+OCT signal strength decreases with tissue depth. This means deeper calcification can be much harder to detect than structures closer to the lumen.
 
 ### 3. Imaging artifacts
 
-Artifacts such as guidewire shadows may obscure vessel-wall information and create low-signal regions that can be confused with pathological structures.
+Guidewire shadows and other artifacts can hide vessel-wall information and create low-signal regions that confuse the model.
 
-### 4. Large morphological variation
+### 4. Large differences in lesion shape and size
 
-Calcification can appear as thin arcs, thick plaques, long continuous structures, or near-circumferential regions. A model therefore needs to handle substantial variation in size, shape, and spatial extent.
+Calcification can appear as thin arcs, thick plaques, long continuous regions, or near-circumferential structures. The model therefore needs to handle many different shapes and sizes.
 
-### 5. Limited context in isolated 2D frames
+### 5. Limited information in a single 2D frame
 
-A single OCT frame captures only one cross-section of the vessel. Adjacent frames contain useful longitudinal information about lesion continuity and structure, motivating a 3D formulation.
+One OCT frame only shows one cross-section of the vessel. Nearby frames provide useful information about how a lesion continues along the vessel, which is why this project uses 3D input.
 
 ---
 
-## Engineering Formulation
+## Engineering Setup
 
-Based on these challenges, the task was formulated as a **3D volumetric segmentation problem**.
+These challenges led to three main design goals:
 
-The problem definition translated into three design requirements:
+1. **Handle weak-signal regions more reliably.**
+2. **Capture wider spatial context instead of relying only on local convolution.**
+3. **Improve segmentation of difficult lesion boundaries.**
 
-1. **Robust feature extraction** for low-contrast and attenuated regions.
-2. **Broader spatial-context modeling** beyond purely local convolutional features.
-3. **Stable boundary delineation** across heterogeneous lesion morphologies.
-
-These requirements directly informed the later preprocessing pipeline, 3D U-Net baseline, graph-based model variants, and evaluation strategy.
+These goals guided the later preprocessing pipeline, 3D U-Net baseline, graph-based models, and evaluation strategy.
 
 ---
 
@@ -51,9 +49,9 @@ These requirements directly informed the later preprocessing pipeline, 3D U-Net 
 ```mermaid
 flowchart TD
     A["Clinical OCT Imaging"] --> B["Low Contrast"]
-    A --> C["Signal Attenuation"]
+    A --> C["Weak Deep-Tissue Signals"]
     A --> D["Artifacts"]
-    A --> E["Morphological Variation"]
+    A --> E["Different Lesion Shapes & Sizes"]
 
     B --> F["Segmentation Failure Modes"]
     C --> F
@@ -61,8 +59,8 @@ flowchart TD
     E --> F
 
     F --> G["Need 3D Context"]
-    F --> H["Need Robust Feature Modeling"]
-    F --> I["Need Boundary-aware Evaluation"]
+    F --> H["Need Better Feature Modeling"]
+    F --> I["Need Strong Evaluation"]
 
     G --> J["3D Volume Construction"]
     H --> K["3D CNN + Graph-based Models"]
@@ -71,14 +69,14 @@ flowchart TD
 
 ---
 
-## Design Questions
+## Main Technical Questions
 
-This problem definition led to the main technical questions explored in the project:
+This problem definition led to the main questions explored in the project:
 
-- Can 3D context improve segmentation compared with frame-level reasoning?
-- Can attention or graph-based modeling capture useful long-range structure?
-- Can graph-domain filtering reduce noisy spatial relationships?
-- Which model improvements remain consistent across repeated experiments?
-- Where do stronger models still fail, and what do those failures reveal about the system?
+- Can 3D context improve segmentation compared with using individual 2D frames?
+- Can attention or graph-based models capture useful long-range structure?
+- Can graph filtering reduce noisy spatial relationships?
+- Are the model improvements consistent across repeated experiments?
+- Where does the best model still fail?
 
 These questions define the rest of the repository.
