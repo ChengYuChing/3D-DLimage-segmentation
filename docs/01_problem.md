@@ -114,11 +114,11 @@ The overall logic is:
 
 | Technical Question | Short Answer | Evidence |
 |---|---|---|
-| **Can 3D context improve segmentation compared with frame-by-frame processing?** | **Yes.** Using neighboring OCT slices provides longitudinal context that is not available from isolated 2D frames and became the basis of the 3D input design. | [Pipeline Deep Dive →](03_pipeline.md) |
-| **Can attention or graph-based models capture useful long-range spatial relationships?** | **Partially.** Graph-based variants improved overall segmentation quality more consistently than attention-only or non-local alternatives. | [Model Design Deep Dive →](04_model_design.md) |
-| **Can graph filtering reduce noisy spatial relationships while preserving useful structure?** | **Yes.** GSF-based models produced the strongest overall results, with GSF_GAP achieving the best mean 3D Dice. | [Model Design Deep Dive →](04_model_design.md) |
-| **Are model improvements consistent across repeated experiments and multiple metrics?** | **Yes, but with trade-offs.** The best-performing models showed stronger Dice/IoU while Precision and Recall varied across architectures. | [Experiments & Results →](05_experiments_results.md) |
-| **Where does the strongest model still fail?** | **Mainly in difficult boundary cases and weak-signal regions.** These failure modes are analyzed qualitatively rather than hidden behind aggregate metrics. | [Experiments & Results →](05_experiments_results.md) |
+| **Why use 3D context instead of frame-by-frame input?** | Calcification extends across neighboring OCT slices, so the pipeline uses 8-slice inputs to preserve longitudinal context. A dedicated 2D baseline was not part of this study. | [Pipeline Deep Dive →](03_pipeline.md) |
+| **How were long-range relationships modeled?** | The model family compares image-space reweighting, dense Non-local attention, graph message passing, and Graph Structural Filtering under the same task. | [Model Design Deep Dive →](04_model_design.md) |
+| **Can Graph Structural Filtering refine graph features before message passing?** | GSF_GAP achieved the highest mean 3D Dice in the model family, supporting further evaluation of graph-frequency reweighting before GraphConv. | [Model Design Deep Dive →](04_model_design.md) |
+| **Are model improvements consistent across repeated experiments and multiple metrics?** | GSF_GAP achieved the highest three-test mean Dice, but single-split rankings changed and Precision–Recall behavior varied across architectures. | [Model Validation & Results →](05_experiments_results.md) |
+| **Where does the strongest model still fail?** | **Mainly in difficult boundary cases and weak-signal regions.** These failure modes are analyzed qualitatively rather than hidden behind aggregate metrics. | [Model Validation & Results →](05_experiments_results.md) |
 
 ---
 
