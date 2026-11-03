@@ -265,7 +265,7 @@ flowchart LR
 |---|---|---|
 | **Controlled comparison** | Same preprocessing, training setup, and data splits | Isolate architecture changes |
 | **Repeated testing** | 3 disjoint test sets · 134 vessels | Reduce dependence on one split |
-| **Whole-vessel evaluation** | Reconstruct overlapping VoI predictions before scoring | Evaluate the final segmentation output |
+| **Vessel-level evaluation** | Aggregate overlapping VoI predictions before scoring | Evaluate the final segmentation output |
 | **Multi-metric analysis** | Dice · Precision · Recall · IoU | Capture overlap and prediction trade-offs |
 
 ### Architecture Evidence
@@ -295,7 +295,7 @@ flowchart LR
 - **Built an end-to-end 3D medical imaging pipeline**, transforming clinical OCT data and physician annotations into structured, model-ready volumetric inputs.
 - **Designed models through controlled architecture progression** — from a shared 3D CNN backbone to graph message passing and Graph Structural Filtering — rather than comparing unrelated architectures.
 - **Connected CNN and graph representations in one segmentation system**, using compact graph construction, long-range message passing, and graph-frequency feature reweighting.
-- **Built a whole-vessel validation framework** with repeated test sets, reconstruction of overlapping predictions, multi-metric evaluation, and paired model comparisons.
+- **Built a vessel-level validation framework** with repeated test sets, overlapping prediction aggregation, multi-metric evaluation, and paired model comparisons.
 - **Used model behavior and failure analysis to guide conclusions**, distinguishing overall overlap, false-positive control, lesion coverage, and remaining image-quality limitations.
 
 ---
@@ -308,7 +308,7 @@ flowchart LR
 | **Deep Learning** | 3D U-Net · Attention U-Net · Conv3D · GroupNorm · ASPP |
 | **Graph Learning** | KNN Graph · GCN · GraphConv · Graph Laplacian · Graph Fourier Transform · Frequency SE |
 | **Image Processing** | DICOM Processing · Polar Transformation · Artifact Removal · Signal Enhancement · Data Augmentation |
-| **Experimentation** | Whole-vessel Reconstruction · 3D Dice · Precision · Recall · IoU · Paired Statistical Testing |
+| **Experimentation** | Overlapping Prediction Aggregation · Vessel-level Evaluation · 3D Dice · Precision · Recall · IoU · Paired Statistical Testing |
 
 ---
 
