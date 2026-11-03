@@ -1,75 +1,79 @@
 # 02. Data Preparation
 
-## 1. What This Stage Solves
-
-Before model development, the raw clinical OCT data had to be converted into a consistent segmentation dataset.
-
-The main task was to connect four pieces of information correctly:
-
-- **OCT images**
-- **clinical annotations**
-- **image metadata**
-- **frame order within each pullback**
-
-The output of this stage is an **ordered and aligned image-mask dataset** that can be passed into the image preprocessing and 3D volume construction pipeline.
+> **Goal:** Turn raw clinical OCT images, metadata, and physician annotations into an ordered and aligned segmentation dataset for downstream 3D modeling.
 
 ---
 
-## 2. Dataset Snapshot
+## 1. Dataset at a Glance
 
-The dataset was collected using the **Abbott OPTIS OCT imaging system** and contains coronary OCT pullbacks from 138 patients.
-
-| Dataset Item | Scale |
+| Dataset | Scale |
 |---|---:|
 | Patients | **138** |
 | OCT pullbacks | **192** |
 | Calcified segments | **436** |
-| Total OCT frames | **34,954** |
+| Total frames | **34,954** |
 | Calcified frames | **26,648** |
 | Non-calcified frames | **8,306** |
-| Original image size | **704 × 704** |
+| Original resolution | **704 × 704** |
+| Imaging system | **Abbott OPTIS OCT** |
 
-Each pullback contains both calcified and non-calcified frames.
+Calcified regions were labeled based on the **consensus of two physicians**.
 
-Calcified regions were labeled based on the **consensus of two physicians**, providing the reference annotations used for segmentation model development.
+### Data Structure
+
+```text
+Patient
+└── OCT Pullback
+    └── Ordered Frames
+        ├── OCT Image
+        ├── Metadata
+        └── Calcification Annotation
+```
+
+The key challenge was not simply handling 34,954 images — it was keeping **image, label, metadata, and frame sequence correctly aligned**.
 
 ---
 
-## 3. Key Data Preparation Challenges
+## 2. Key Data Challenges
 
-The data preparation problem can be grouped into three areas.
-
-### A. Multiple Data Sources
-
-The segmentation dataset was not stored as a simple image-mask folder.
-
-Each OCT frame had to be connected with:
-
-- its image data,
-- DICOM metadata,
-- annotation information,
-- pullback identity,
-- original frame position.
-
-A mismatch between any of these components could create incorrect image-label pairs.
-
-### B. Clinical Annotations Were Not Model-ready Labels
-
-The original annotation records described calcified regions using spatial coordinates rather than ready-to-use binary masks.
-
-These annotations therefore had to be converted into **pixel-level segmentation labels** while keeping the geometry aligned with the corresponding OCT image.
-
-### C. OCT Frames Have Sequential Structure
-
-Frames from the same OCT pullback are ordered along the vessel.
-
-This order is essential because the later 3D model uses neighboring frames as one input volume.
-
-Treating the dataset as a collection of independent images would remove this longitudinal information.
+| Challenge | Why It Matters |
+|---|---|
+| **Multiple data sources** | Images, metadata, and annotations had to refer to the same OCT frame |
+| **Annotation format** | Clinical coordinate annotations had to become pixel-level segmentation masks |
+| **Sequential structure** | Frame order had to be preserved because later 3D inputs use neighboring slices |
 
 ### Key Takeaway
 
-The goal of P2 was not only to collect images, but to preserve the **image-label relationship and vessel sequence structure** required by the later 3D pipeline.
+The dataset could not be treated as a flat folder of independent images.
+
+It had to preserve both:
+
+- **spatial alignment** — image ↔ segmentation mask
+- **longitudinal alignment** — frame ↔ neighboring frames in the same pullback
+
+---
+
+## 3. What I Built
+
+I built a MATLAB-based data preparation workflow with three main functions.
+
+### A. Structured Data Ingestion
+
+- Read raw OCT images and associated DICOM metadata
+- Extracted frame information such as **InstanceNumber**
+- Preserved patient and pullback relationships
+
+### B. Image–Label Alignment
+
+- Parsed physician-defined calcification annotations
+- Converted annotation regions into pixel-level segmentation masks
+- Maintained consistent image-mask geometry
+
+### C. Sequence Preservation
+
+- Ordered frames according to their original OCT scan sequence
+- Checked continuity between neighboring frames
+- Prepared each pullback as an ordered sequence for later 3D volume construction
 
 ---
 
@@ -77,122 +81,58 @@ The goal of P2 was not only to collect images, but to preserve the **image-label
 
 ```mermaid
 flowchart LR
-    A["Raw OCT DICOM"] --> C["Data Ingestion"]
-    B["Clinical Annotations"] --> C
+    A["Raw OCT Images"] --> D["Structured Ingestion"]
+    B["DICOM Metadata"] --> D
+    C["Clinical Annotations"] --> D
 
-    C --> D["Metadata Extraction"]
-    C --> E["Annotation Parsing"]
+    D --> E["Image–Label Alignment"]
+    E --> F["Frame Ordering"]
+    F --> G["Ordered OCT Sequences"]
 
-    D --> F["Frame & Pullback Mapping"]
-    E --> G["Pixel-level Mask Construction"]
-
-    F --> H["Ordered Image Sequences"]
-    G --> I["Aligned Segmentation Labels"]
-
-    H --> J["Structured OCT Dataset"]
-    I --> J
-
-    J --> K["P3: Preprocessing Pipeline"]
+    G --> H["P3: Preprocessing"]
 ```
 
-The workflow separates **data organization** from **image transformation**.
-
-P2 determines *what each sample is and where it belongs*.  
-P3 determines *how the image itself should be transformed before training*.
-
----
-
-## 5. Image, Metadata & Annotation Alignment
-
-### DICOM Ingestion
-
-The data pipeline reads both the OCT image and its associated DICOM metadata.
-
-Key metadata fields are used to maintain the original scan structure, including:
-
-- **InstanceNumber** for frame ordering,
-- **PixelSpacing** for spatial alignment,
-- pullback-level organization.
-
-This allows the pipeline to reconstruct the original sequence rather than relying on file names alone.
-
-### Annotation-to-Mask Construction
-
-Clinical annotation coordinates are mapped to the corresponding OCT image and converted into pixel-level segmentation masks.
-
-The resulting structure is:
+### Before
 
 ```text
-OCT Frame
-   │
-   ├── Image
-   ├── Calcification Mask
-   ├── Frame Index
-   └── Pullback Information
+Images + Metadata + Annotation Files
 ```
 
-This image-mask alignment becomes the ground-truth representation used throughout model development.
-
----
-
-## 6. Preserving Pullback Continuity
-
-Frame ordering is especially important for this project because the final model does not process isolated images.
-
-The data pipeline therefore preserves the original OCT sequence using frame metadata and checks the continuity of neighboring frames.
-
-Conceptually:
+### After
 
 ```text
 Pullback
-│
-├── Frame 001
-├── Frame 002
-├── Frame 003
-├── ...
-└── Frame T
+├── Frame 001 → Image + Mask
+├── Frame 002 → Image + Mask
+├── Frame 003 → Image + Mask
+└── ...
 ```
 
-This ordered structure becomes the input for the sliding-window VoI construction in P3.
-
-### Why This Matters
-
-Without preserved frame order:
-
-- neighboring slices could be mixed incorrectly,
-- 3D volumes would no longer represent true vessel continuity,
-- longitudinal lesion information would be unreliable.
-
-Sequence preservation is therefore a **data requirement**, not only a preprocessing detail.
+This structure provides a consistent input interface for every later preprocessing and modeling experiment.
 
 ---
 
-## 7. Output Data Contract
-
-At the end of P2, each OCT sequence contains the information required by the next stage:
-
-| Output | Purpose |
-|---|---|
-| **OCT image** | Input image for preprocessing |
-| **Segmentation mask** | Ground-truth label |
-| **Frame index** | Preserves longitudinal position |
-| **Pullback identity** | Keeps frames grouped by vessel scan |
-| **Ordered sequence** | Enables later 3D VoI construction |
+## 5. Output
 
 ### P2 Output
 
-**Ordered, aligned OCT image-mask sequences**
+**Ordered and aligned OCT image-mask sequences**
 
-↓
+Each frame retains:
 
-### Consumed by P3
+| Information | Purpose |
+|---|---|
+| OCT image | Model input |
+| Segmentation mask | Ground truth |
+| Frame index | Longitudinal position |
+| Pullback identity | Sequence grouping |
 
-**Domain-specific image preprocessing and 3D volume construction**
+### Why It Matters
 
----
+P2 establishes the **data contract** for the rest of the system.
 
-## 8. Engineering Takeaway
+The next stage can focus entirely on image transformation and 3D input construction without redefining the underlying dataset.
 
-The main engineering value of this stage was establishing a reliable interface between **raw clinical data** and the later **computer-vision pipeline**.
+**P2: Structure the data → P3: Transform the data**
 
-By preserving image-label alignment, metadata, and sequence order, the same structured dataset could be reused consistently across preprocessing and model experiments.
+[Next: Preprocessing Pipeline →](03_pipeline.md)
