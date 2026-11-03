@@ -298,7 +298,7 @@ These inputs are shared across the model architectures evaluated in P4.
 
 P3 ends at **model input construction**.
 
-Full-vessel reconstruction happens later:
+Vessel-level prediction aggregation happens later:
 
 ```text
 VoI Predictions
@@ -309,9 +309,9 @@ Average Overlapping Probabilities
       ↓
 Threshold = 0.5
       ↓
-Full-vessel 3D Prediction
+Final Vessel-level Prediction
 ```
 
-That belongs to **P5 — Evaluation & Results**.
+That belongs to **P5 — Model Validation & Results**.
 
 [Next: Model Design →](04_model_design.md)
