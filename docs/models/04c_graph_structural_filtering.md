@@ -2,6 +2,8 @@
 
 [← Model Design Hub](../04_model_design.md) · [← Graph Representation](04b_graph_representation.md)
 
+> **Goal:** Refine graph features in the graph-frequency domain before GraphConv while keeping the underlying KNN graph fixed.
+
 Graph Structural Filtering (GSF) extends the GCN baseline by refining graph features **before message passing**.
 
 > **Core idea:** keep the same KNN graph, decompose node features into graph-frequency components, learn their relative importance, then reweight and fuse them before GraphConv.
@@ -225,7 +227,7 @@ This isolates a second question:
 
 ---
 
-## Engineering Takeaways
+## Key Takeaways
 
 - Added **Graph Structural Filtering before GraphConv** while keeping the underlying KNN graph fixed.
 - Used the normalized graph Laplacian and eigendecomposition to obtain **128 graph-frequency components**.
