@@ -24,7 +24,7 @@
 
 ```mermaid
 flowchart TB
-    A["Clinical OCT + Physician Annotations"]
+    A["Raw Imaging Data +<br/>Ground-Truth Labels"]
     B["P2 · Data Preparation<br/>DICOM · Masks · Sequence Mapping"]
     C["P3 · Preprocessing<br/>Polar Transform · Artifact Handling · Signal Enhancement"]
     D["3D Inputs<br/>256×256×8"]
