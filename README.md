@@ -126,15 +126,15 @@ flowchart LR
 
 | Decision | What I Built |
 |---|---|
-| **Clean the signal** | Removed lumen noise and guidewire-shadow regions |
-| **Normalize the geometry** | Converted Cartesian OCT frames to a 256×256 polar representation |
-| **Strengthen useful features** | Applied depth-aware enhancement and OCT-specific augmentation |
-| **Add longitudinal context** | Built overlapping 8-slice 3D VoIs with stride 3 |
+| **Clean the signal** | Removed lumen-region noise before downstream processing |
+| **Normalize the geometry** | Converted Cartesian OCT frames to a 256×256 polar representation and introduced center-shift augmentation during transformation |
+| **Refine tissue features** | Removed guidewire shadows and enhanced weak deep-tissue signals |
+| **Build 3D context** | Constructed overlapping 8-slice 3D VoIs with stride 3 |
 
 **Technical Highlights**
-- Combined **U-Net-based lumen segmentation and guidewire-shadow removal** to reduce OCT-specific imaging noise before model training.
-- Transformed raw OCT frames from **Cartesian to 256×256 polar coordinates**, aligning the representation with the radial structure of the vessel wall.
-- Applied **depth-aware signal enhancement and center-shift augmentation** to strengthen weak deep-tissue features and increase input variation.
+- Used **U-Net-based lumen segmentation** to remove lumen-region noise before downstream image processing.
+- Transformed OCT frames from **Cartesian to 256×256 polar coordinates** and introduced **center-shift augmentation** through alternative transformation centers.
+- Combined **guidewire-shadow removal and depth-aware signal enhancement** to reduce artifacts and strengthen weak deep-tissue features.
 - Constructed overlapping **8-slice 3D VoIs with stride 3**, producing **256×256×8×1 inputs** that preserve longitudinal lesion context.
 
 **Impact**
@@ -147,36 +147,39 @@ flowchart LR
     A["Standardized OCT Sequences"]
 
     subgraph S1["1. Clean"]
-        B["Lumen Noise Removal"]
-        C["Guidewire Shadow Removal"]
+        B["Lumen Segmentation"]
+        C["Noise Removal + Grayscale"]
     end
 
     subgraph S2["2. Normalize"]
         D["Cartesian → Polar"]
         E["Resize to 256×256"]
+        F["Center-shift Augmentation"]
     end
 
-    subgraph S3["3. Enhance"]
-        F["Depth-aware Signal Enhancement"]
-        G["Center-shift Augmentation"]
+    subgraph S3["3. Refine"]
+        G["Guidewire Shadow Removal"]
+        H["Depth-aware Enhancement"]
     end
 
     subgraph S4["4. Build 3D Context"]
-        H["8-slice Sliding Window"]
-        I["Stride = 3"]
+        I["8-slice Sliding Window"]
+        J["Stride = 3"]
     end
 
-    J["256×256×8×1 Model Input"]
+    K["256×256×8×1 Model Input"]
 
     A --> B
     B --> C
     C --> D
     D --> E
-    E --> F
+    E --> G
+    D -. "training augmentation" .-> F
     F --> G
     G --> H
     H --> I
     I --> J
+    J --> K
 ```
 
 [Deep Dive →](docs/03_pipeline.md)
