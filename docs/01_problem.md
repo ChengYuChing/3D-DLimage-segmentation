@@ -1,4 +1,8 @@
-# 01. Problem Definition
+# P1 — Problem Definition
+
+[← Back to README](../README.md#p1--problem-definition)
+
+> **Goal:** Translate imaging failure modes into engineering requirements before choosing preprocessing and model strategies.
 
 ## 1. Task Definition
 
@@ -110,16 +114,15 @@ The overall logic is:
 
 ---
 
-## 6. Key Technical Questions & Answers
+## 6. Validation Questions
 
-| Technical Question | Short Answer | Evidence |
+| Design Question | Why It Matters | Validated In |
 |---|---|---|
-| **Why use 3D context instead of frame-by-frame input?** | Calcification extends across neighboring OCT slices, so the pipeline uses 8-slice inputs to preserve longitudinal context. A dedicated 2D baseline was not part of this study. | [Pipeline Deep Dive →](03_pipeline.md) |
-| **How were long-range relationships modeled?** | The model family compares image-space reweighting, dense Non-local attention, graph message passing, and Graph Structural Filtering under the same task. | [Model Design Deep Dive →](04_model_design.md) |
-| **Can Graph Structural Filtering refine graph features before message passing?** | GSF_GAP achieved the highest mean 3D Dice in the model family, supporting further evaluation of graph-frequency reweighting before GraphConv. | [Model Design Deep Dive →](04_model_design.md) |
-| **Are model improvements consistent across repeated experiments and multiple metrics?** | GSF_GAP achieved the highest three-test mean Dice, but single-split rankings changed and Precision–Recall behavior varied across architectures. | [Model Validation & Results →](05_experiments_results.md) |
-| **Where does the strongest model still fail?** | **Mainly in difficult boundary cases and weak-signal regions.** These failure modes are analyzed qualitatively rather than hidden behind aggregate metrics. | [Model Validation & Results →](05_experiments_results.md) |
-
+| **Why use 3D context instead of frame-by-frame input?** | Preserve longitudinal information across neighboring slices | [P3 — Preprocessing Pipeline](03_pipeline.md) |
+| **Does graph message passing add value beyond the 3D CNN backbone?** | Test whether explicit long-range relations improve the representation | [P4 — Model Design](04_model_design.md) · [P5 — Validation](05_experiments_results.md) |
+| **Does Graph Structural Filtering add value before GraphConv?** | Isolate the effect of graph-frequency feature refinement | [P4 — Model Design](04_model_design.md) · [P5 — Validation](05_experiments_results.md) |
+| **Are gains stable across repeated tests and multiple metrics?** | Avoid selecting a model from one favorable split or one score | [P5 — Model Validation & Results](05_experiments_results.md) |
+| **Where does the system still fail?** | Separate model improvements from remaining data-quality limitations | [P5 — Failure Analysis](05_experiments_results.md#8-failure-analysis) |
 ---
 
 ## 7. Success Criteria
@@ -134,3 +137,19 @@ I therefore defined success across four dimensions:
 - **Qualitative robustness:** perform well across different lesion shapes and difficult imaging conditions.
 
 These criteria became the basis for the final evaluation framework.
+
+---
+
+## Key Takeaways
+
+- The segmentation problem was translated into three requirements: **robustness, wider spatial context, and boundary quality**.
+- Those requirements directly shaped the later **preprocessing, 3D input, graph-modeling, and evaluation** decisions.
+- The project was structured around testable design questions rather than selecting architectures first and justifying them afterward.
+
+---
+
+## Next
+
+Turn the problem requirements into a reliable dataset with aligned images, labels, metadata, and frame order:
+
+**[P2 — Data Preparation →](02_data.md)**
