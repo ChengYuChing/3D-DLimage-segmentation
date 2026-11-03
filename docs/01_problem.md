@@ -15,30 +15,32 @@ The goal was not simply to maximize a single segmentation score, but to build a 
 
 ---
 
-## 2. Why the Problem Is Hard
+## 2. Key Segmentation Challenges
 
-The segmentation challenge can be grouped into two main areas.
+The main challenges fall into two categories: **image / lesion complexity** and **limited spatial context**.
 
-### A. Image and Lesion Challenges
+### A. Image & Lesion Complexity
 
-**Weak and unclear boundaries**  
-Calcified regions do not always have sharp or complete boundaries. Some lesions gradually blend into surrounding tissue, increasing the risk of both under-segmentation and over-segmentation.
+- **Unclear boundaries**  
+  Calcified regions may have weak or incomplete edges, increasing the risk of under-segmentation and over-segmentation.
 
-**Weak deep-tissue signals**  
-OCT signal strength decreases with tissue depth. Deeper calcification can therefore appear darker and less distinct than structures closer to the lumen.
+- **Weak deep-tissue signals**  
+  OCT signal strength decreases with tissue depth, making deeper calcification harder to distinguish.
 
-**Imaging artifacts**  
-Guidewire shadows and other artifacts can hide vessel-wall information or create low-signal regions that may confuse the model.
+- **Imaging artifacts**  
+  Guidewire shadows and other artifacts can hide vessel-wall information or create misleading low-signal regions.
 
-**Large variation in lesion shape and size**  
-Calcification can appear as thin arcs, thick plaques, long continuous regions, fragmented lesions, or near-circumferential structures.
+- **Large variation in lesion morphology**  
+  Calcification can appear as thin arcs, thick plaques, fragmented regions, long continuous lesions, or near-circumferential structures.
 
-### B. Context Limitation
+### B. Limited Spatial Context
 
-**A single 2D frame provides limited context**  
-One OCT frame shows only one cross-section of the vessel. However, calcified lesions often continue across multiple neighboring frames.
+- **A single frame captures only one vessel cross-section**  
+  Calcified lesions often continue across neighboring frames, so frame-by-frame processing can miss useful longitudinal information.
 
-Processing each frame independently can therefore lose useful information about lesion continuity and structure.
+### Key Takeaway
+
+These challenges suggest that a strong solution needs to be **robust to noisy signals, use information across multiple frames, and handle complex lesion boundaries**.
 
 ---
 
