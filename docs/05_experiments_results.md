@@ -6,7 +6,7 @@ The validation stage was designed to answer one engineering question:
 
 > **Do the added graph and structural-filtering components improve the final vessel-level segmentation in a controlled and repeatable way?**
 
-Rather than relying on a single split or individual 3D VoIs, all models were evaluated under the same data conditions and scored after reconstructing complete vessels.
+Rather than relying on a single split or individual 3D VoIs, all models were evaluated under the same data conditions and scored after aggregating predictions at the vessel level.
 
 ---
 
@@ -19,7 +19,7 @@ The model family in P4 was built as a controlled progression:
 The evaluation therefore focused on four questions:
 
 1. **Graph value:** Does explicit graph representation and message passing improve over the shared 3D CNN baseline?
-2. **Structural-filtering value:** Does GSF improve the graph representation before GraphConv?
+2. **Structural-filtering value:** Does GSF refine graph features before GraphConv?
 3. **Design behavior:** How do GAP, RMSP, and soft gating change Precision–Recall behavior?
 4. **Alternative strategies:** How do graph-based models compare with CWA and dense Non-local attention?
 
@@ -85,7 +85,7 @@ flowchart LR
 
 The model predicts overlapping **8-slice VoIs with stride 3**, so multiple VoIs can produce predictions for the same original slice.
 
-Evaluation is therefore performed only after reconstructing the final vessel-level output.
+Evaluation is therefore performed only after aggregating overlapping predictions into the final vessel-level output.
 
 ```mermaid
 flowchart LR
@@ -102,7 +102,7 @@ flowchart LR
 
 This prevents overlapping VoIs or individual frames from being treated as independent test cases.
 
-> **Evaluation unit:** one reconstructed whole vessel.
+> **Evaluation unit:** one vessel-level prediction.
 
 ---
 
@@ -216,8 +216,8 @@ Three representative patterns were especially informative:
 
 | Case Pattern | Observation | Engineering Implication |
 |---|---|---|
-| **Deep low-contrast boundary** | Graph and GSF models often produced more continuous contours, but all models could underestimate deep lesion extent | Better feature modeling cannot recover image information that is not present |
-| **Long arc with heterogeneous texture** | Graph-based models showed more continuous long-range contours in representative cases | Relational modeling may be most useful when lesion structure spans multiple local regions |
+| **Deep low-contrast boundary** | In representative cases, graph and GSF models showed more continuous contours, but all models could underestimate deep lesion extent | Better feature modeling cannot recover image information that is not present |
+| **Long arc with heterogeneous texture** | In representative cases, graph-based models showed more continuous long-range contours | Relational modeling may be most useful when lesion structure spans multiple local regions |
 | **Small clear lesion** | Differences between models were limited when local image evidence was already strong | Additional graph complexity is not equally valuable for every case |
 
 These visual examples are used as **supporting evidence**, not as a substitute for whole-dataset quantitative evaluation.
