@@ -250,16 +250,34 @@ Each model has a clear role:
 - **Developed Graph Structural Filtering (GSF)** using Graph Fourier Transform and Frequency Squeeze-and-Excitation to adaptively reweight graph-frequency components before propagation.
 - **Built controlled ablation and comparison models** across GAP, RMSP, soft gating, CWA, and Non-local attention to isolate the contribution of each architectural choice.
 
-### Core Modules
+### Architecture Pipeline
 
-**Shared 3D Backbone**  
-`8 slices · 32 base channels · GroupNorm · ASPP · depth-dilated Conv3D · attention-gated skips`
+```text
+3D OCT Volume
+      ↓
+3D Attention U-Net
+Feature Extraction
+      ↓
+Multi-scale 3D Features
+      ↓
+Graph Projection
+128 Nodes · KNN k=4
+      ↓
+Graph Structural Filtering
+GFT · Frequency SE · Reweighting
+      ↓
+Residual Fusion
+      ↓
+2× GraphConv
+      ↓
+Segmentation Decoder
+```
 
-**Graph Representation**  
-`128 nodes · KNN k=4 · 2× GraphConv · residual connections`
-
-**Graph Structural Filtering**  
-`GFT · Frequency SE · adaptive spectral reweighting · residual fusion`
+| Stage | Purpose |
+|---|---|
+| **3D Backbone** | Extract multi-scale spatial and cross-slice features |
+| **Graph Representation** | Convert CNN features into a compact relational representation |
+| **GSF** | Reweight graph-frequency information before message passing |
 
 ### Comparison Baselines
 
