@@ -79,7 +79,7 @@ The model family is structured to separate four questions:
 
 1. **Backbone:** Can the shared 3D CNN capture enough spatial and cross-slice context?
 2. **Graph modeling:** Does an explicit graph improve long-range feature interaction?
-3. **Spectral filtering:** Can graph-frequency reweighting refine features before message passing?
+3. **Structural Filtering:** Can graph-frequency reweighting refine features before message passing?
 4. **Design choice:** How do GAP, RMSP, and soft gating change the GSF behavior?
 
 CWA and Non-local U-Net provide alternative non-graph comparison strategies so the evaluation is not limited to CNN-versus-GNN comparisons.
