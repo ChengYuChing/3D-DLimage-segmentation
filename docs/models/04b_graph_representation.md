@@ -163,7 +163,7 @@ GCN U-Net is not only another model variant. It establishes the reference point 
 |---|---|
 | **U-Net** | 3D image feature extraction |
 | **GCN U-Net** | Explicit graph construction + long-range message passing |
-| **GSF U-Net** | Structural filtering before graph message passing |
+| **GSF family** | Graph Structural Filtering before graph message passing |
 
 This progression isolates the question:
 
