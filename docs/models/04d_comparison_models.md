@@ -2,6 +2,8 @@
 
 [← Model Design Hub](../04_model_design.md) · [← Graph Structural Filtering](04c_graph_structural_filtering.md)
 
+> **Goal:** Compare the graph-based pipeline with alternative image-space reweighting and dense global-attention strategies.
+
 CWA U-Net and Non-local U-Net are included as **comparison baselines**, not as stages in the GSF architecture.
 
 They represent two alternative ways to improve context modeling without using the proposed graph structural filtering pipeline.
@@ -122,7 +124,7 @@ This distinction is important when interpreting the results in P5.
 
 ---
 
-## Engineering Takeaways
+## Key Takeaways
 
 - Compared the proposed graph pipeline against both **image-space reweighting** and **graph-free global attention**.
 - Used Non-local attention as an explicit long-range baseline without KNN graph construction.
