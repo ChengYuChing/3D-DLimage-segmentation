@@ -15,7 +15,7 @@
 | **1. Problem Definition** | Coronary OCT calcification is difficult to segment because of weak signals, artifacts, limited 2D context, and complex lesion boundaries | Translated imaging failure modes into clear requirements for **robustness, wider spatial context, and boundary quality** | Established the technical direction for the full ML pipeline | Problem Framing, Medical Imaging, Segmentation |
 | **2. Data Preparation** | Raw clinical OCT scans, metadata, and physician annotations were not directly usable for model training | Built a structured workflow to ingest **34,954 frames**, convert clinical annotations into pixel-level masks, and preserve pullback sequence information | Created a standardized segmentation dataset linking images, labels, metadata, and frame order | Data Engineering, DICOM, Annotation Processing, Dataset Design |
 | **3. Preprocessing Pipeline** | Standardized OCT frames still contained imaging noise, artifacts, signal loss, and limited longitudinal context | Built a domain-specific pipeline for **lumen noise removal, polar transformation, guidewire-shadow handling, signal enhancement, augmentation, and 3D VoI construction** | Transformed **704×704 OCT frames into standardized 256×256×8 3D inputs with longitudinal context** | Image Processing, MATLAB, Data Augmentation, 3D Data Pipeline |
-| **4. Model Design** | Standard 3D CNNs mainly capture local patterns and may miss wider structural relationships | Developed and compared **3D U-Net, attention, GCN, graph structural filtering, gated fusion, and non-local** architectures | Identified **GSF_GAP** as the strongest overall model with mean **3D Dice 0.834** | Deep Learning, 3D CNN, GNN, Architecture Design |
+| **4. Model Design** | Standard 3D CNNs mainly capture local patterns and may miss wider structural relationships | Built a shared **3D Attention U-Net backbone**, then evaluated **graph message passing, Graph Structural Filtering, and alternative global-context baselines** | Identified **GSF_GAP** as the strongest overall model with mean **3D Dice 0.834** | Deep Learning, 3D CNN, GNN, Architecture Design |
 | **5. Evaluation & Results** | Model improvements needed to be validated across full vessels and repeated experiments rather than individual VoIs or one favorable split | Reconstructed overlapping VoI predictions into full-vessel masks and evaluated models using **Dice, Precision, Recall, IoU, and statistical testing** | Achieved best mean **Dice 0.834** and **IoU 0.703**, while identifying precision–recall trade-offs across architectures | Experiment Design, Statistical Testing, Model Evaluation |
 
 ---
@@ -186,11 +186,11 @@ flowchart LR
 
 ## P4 — Model Design
 
-> **Design Goal:** Extend a strong 3D segmentation backbone from local image modeling to explicit long-range graph reasoning, then improve graph message passing through adaptive graph-frequency filtering.
+> **Design Goal:** Extend a shared 3D segmentation backbone with explicit graph-based long-range modeling, then refine graph features before message passing through Graph Structural Filtering.
 
 ### Architecture Evolution
 
-> **Design progression:** 3D feature extraction → graph-based long-range modeling → frequency-aware graph filtering.
+> **Design progression:** 3D feature extraction → graph-based long-range modeling → Graph Structural Filtering.
 
 ```mermaid
 flowchart LR
@@ -198,7 +198,7 @@ flowchart LR
 
     A -->|"Need explicit<br/>long-range relations"| B["GCN U-Net<br/>Graph Baseline"]
 
-    B -->|"Graph information<br/>may contain noise"| C["GSF_GAP U-Net<br/>Main Method"]
+    B -->|"Can graph features be<br/>refined before propagation?"| C["GSF_GAP U-Net<br/>Main Method"]
 
     C --> D["GSF_RMSP<br/>Frequency Descriptor Variant"]
     C --> E["Gated GSF_GAP<br/>Soft-filtering Variant"]
@@ -214,7 +214,7 @@ flowchart LR
 | Area | Decision | Engineering Rationale |
 |---|---|---|
 | **3D Backbone** | 8 slices · 32 base channels · GroupNorm | Improve cross-slice context and stabilize small-batch training |
-| **Graph Representation** | 128 nodes · KNN `k=4` | Balance long-range modeling with graph complexity |
+| **Graph Representation** | 128 nodes · KNN `k=4` | Reduce graph computation while preserving the 8-slice depth structure |
 | **Message Passing** | 2× GraphConv + residual connections | Aggregate relational context while preserving node features |
 | **Graph Filtering** | GFT + Frequency SE | Adapt graph-frequency contributions before propagation |
 
@@ -233,7 +233,7 @@ flowchart LR
     A["3D OCT Input<br/>256×256×8×1"]
     B["① Extract 3D Features<br/>3D Attention U-Net"]
     C["② Build Relational Graph<br/>128 nodes · KNN k=4"]
-    D["③ Filter Graph Signals<br/>GFT · Frequency SE · Reweighting"]
+    D["③ Apply Structural Filtering<br/>GFT · Frequency SE · Reweighting"]
     E["④ Propagate Long-range Context<br/>2× GraphConv"]
     F["⑤ Decode Segmentation<br/>3D Decoder"]
 
@@ -248,7 +248,7 @@ flowchart LR
 
 ### Impact
 
-- Established a controlled model design that separates the effects of the **3D backbone, graph message passing, and spectral filtering**.
+- Established a controlled model design that separates the effects of the **3D backbone, graph message passing, and Graph Structural Filtering**.
 - **GSF_GAP U-Net achieved the highest mean 3D Dice of 0.834**, outperforming both the U-Net and GCN baselines.
 
 [Model Design Deep Dive →](docs/04_model_design.md)
