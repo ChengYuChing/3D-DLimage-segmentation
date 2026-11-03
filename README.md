@@ -25,30 +25,30 @@
 ## P1 — Problem Definition
 
 **Problem**  
-Coronary calcification is difficult to segment in OCT because lesion boundaries can be weak or incomplete, signal intensity decreases with tissue depth, imaging artifacts obscure local anatomy, and calcified plaques vary substantially in thickness, arc, and morphology.
+Coronary calcification is difficult to segment in OCT because lesion boundaries can be unclear, deeper tissue has weaker signals, imaging artifacts can hide local structures, and calcified plaques vary greatly in shape and size.
 
 **Solution**  
-Framed the task as a **3D medical image segmentation problem** so the model could use both cross-sectional appearance and information from adjacent OCT frames. The problem definition was translated into three technical objectives: improve robustness to low-contrast regions, capture broader spatial context, and preserve difficult lesion boundaries.
+Defined the task as a **3D medical image segmentation problem** so the model could use both each OCT frame and nearby frames. This led to three main design goals: handle weak-signal regions better, capture wider spatial context, and improve boundary segmentation.
 
 **Technical Highlights**
-- Identified major failure modes including **low contrast, signal attenuation, guidewire artifacts, and heterogeneous lesion morphology**.
-- Defined a **3D volumetric formulation** rather than treating each OCT frame independently.
-- Used the observed failure modes to guide later choices in preprocessing, graph-based contextual modeling, and evaluation.
+- Identified key failure modes: **low contrast, signal attenuation, guidewire artifacts, and large differences in lesion shape and size**.
+- Used a **3D segmentation setup** instead of treating each OCT frame independently.
+- Used these failure modes to guide the later preprocessing, graph-based model design, and evaluation strategy.
 
 **Impact**
-- Established a clear set of engineering requirements that connected the clinical imaging challenge to the downstream **data pipeline, model architecture, and evaluation strategy**.
+- Turned the clinical imaging challenge into clear engineering requirements for the **data pipeline, model architecture, and evaluation setup**.
 
 **Architecture / Workflow**
 
 ```mermaid
 flowchart LR
-    A["Coronary OCT"] --> B["Low Contrast / Signal Attenuation"]
+    A["Coronary OCT"] --> B["Low Contrast / Weak Signals"]
     A --> C["Artifacts"]
-    A --> D["Variable Lesion Morphology"]
+    A --> D["Different Lesion Shapes & Sizes"]
     B --> E["Segmentation Challenges"]
     C --> E
     D --> E
-    E --> F["3D Context + Robust Boundary Modeling"]
+    E --> F["3D Context + Better Boundary Modeling"]
     F --> G["Model & Evaluation Requirements"]
 ```
 
