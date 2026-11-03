@@ -22,28 +22,34 @@
 
 # Project Details
 
-## P1 — Problem
+## P1 — Problem Definition
 
 **Problem**  
-_TODO_
+Coronary calcification is difficult to segment in OCT because lesion boundaries can be weak or incomplete, signal intensity decreases with tissue depth, imaging artifacts obscure local anatomy, and calcified plaques vary substantially in thickness, arc, and morphology.
 
 **Solution**  
-_TODO_
+Framed the task as a **3D medical image segmentation problem** so the model could use both cross-sectional appearance and information from adjacent OCT frames. The problem definition was translated into three technical objectives: improve robustness to low-contrast regions, capture broader spatial context, and preserve difficult lesion boundaries.
 
 **Technical Highlights**
-- _TODO_
-- _TODO_
-- _TODO_
+- Identified major failure modes including **low contrast, signal attenuation, guidewire artifacts, and heterogeneous lesion morphology**.
+- Defined a **3D volumetric formulation** rather than treating each OCT frame independently.
+- Used the observed failure modes to guide later choices in preprocessing, graph-based contextual modeling, and evaluation.
 
 **Impact**
-- _TODO_
+- Established a clear set of engineering requirements that connected the clinical imaging challenge to the downstream **data pipeline, model architecture, and evaluation strategy**.
 
 **Architecture / Workflow**
 
 ```mermaid
 flowchart LR
-    A["Clinical Problem"] --> B["Technical Challenges"]
-    B --> C["Segmentation Objective"]
+    A["Coronary OCT"] --> B["Low Contrast / Signal Attenuation"]
+    A --> C["Artifacts"]
+    A --> D["Variable Lesion Morphology"]
+    B --> E["Segmentation Challenges"]
+    C --> E
+    D --> E
+    E --> F["3D Context + Robust Boundary Modeling"]
+    F --> G["Model & Evaluation Requirements"]
 ```
 
 [Deep Dive →](docs/01_problem.md)
