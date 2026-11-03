@@ -1,8 +1,10 @@
-# 05. Model Validation & Results
+# P5 — Model Validation & Results
 
 [← Back to README](../README.md#p5--model-validation--results) · [← Model Design](04_model_design.md)
 
-The validation stage was designed to answer one engineering question:
+> **Goal:** Determine whether graph modeling and Graph Structural Filtering produce repeatable value beyond the shared 3D CNN backbone under the same vessel-level evaluation setup.
+
+The validation stage was designed around one engineering question:
 
 > **Do the added graph and structural-filtering components improve the final vessel-level segmentation in a controlled and repeatable way?**
 
@@ -236,7 +238,7 @@ The results do **not** establish that graph-based architectures are universally 
 
 ---
 
-## Engineering Takeaways
+## Key Takeaways
 
 - Built a controlled validation framework where architecture changes were evaluated under the same data and training conditions.
 - Evaluated the **final vessel-level output**, not overlapping VoIs as independent samples.
@@ -245,4 +247,13 @@ The results do **not** establish that graph-based architectures are universally 
 - Used paired case-level analysis to support model comparisons while keeping statistical claims within the limits of the experiment.
 - Identified deep low-contrast boundaries as a remaining bottleneck that additional model complexity alone may not solve.
 
-> **Next validation priorities:** full cross-validation, external-center validation, boundary-based metrics, graph-construction ablations, and direct visualization of learned graph-frequency behavior.
+---
+
+## Next
+
+If the system were extended, the highest-value validation priorities would be:
+
+- **full cross-validation** and external-center validation,
+- **boundary-based metrics** in addition to region overlap,
+- **graph-construction ablations** for node count and KNN design,
+- direct visualization of **learned graph-frequency behavior**.
