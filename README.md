@@ -190,23 +190,7 @@ flowchart LR
 
 ### Architecture Evolution
 
-The model family was designed as a sequence of technical questions rather than a collection of independent architectures.
-
-| Step | Limitation to Address | Design Response | Model |
-|---|---|---|---|
-| **1. Build strong 3D features** | Calcification extends across slices and varies in scale | 3D convolution, multi-scale context, depth-aware receptive field, attention-guided decoding | **U-Net** |
-| **2. Add long-range relations** | CNN features interact mainly through local convolution | Convert multi-scale features into graph nodes and perform KNN-based message passing | **GCN U-Net** |
-| **3. Improve graph information** | Feature-similar KNN connections may contain irrelevant or noisy structural relationships | Decompose graph signals into frequency components and adaptively reweight them before message passing | **GSF_GAP U-Net** |
-| **4. Test GSF design choices** | Frequency importance can be described or filtered in different ways | Compare GAP, RMSP, and learnable soft gating | **GSF_RMSP / Gated GSF_GAP** |
-| **5. Benchmark other strategies** | Improvements should be separated from generic attention or global-context effects | Compare with image-space feature weighting and graph-free dense global attention | **CWA / Non-local U-Net** |
-
-The final design therefore follows:
-
-> **3D Image Modeling → Graph Relation Modeling → Graph Structural Filtering**
-
----
-
-### Model Family
+> **Design progression:** 3D feature extraction → graph-based long-range modeling → frequency-aware graph filtering.
 
 ```mermaid
 flowchart LR
@@ -223,32 +207,24 @@ flowchart LR
     A -. "Alternative global modeling" .-> G["Non-local U-Net"]
 ```
 
-Each model has a clear role:
-
-- **U-Net** — 3D image baseline
-- **GCN U-Net** — graph message-passing baseline
-- **GSF_GAP U-Net** — main graph-frequency filtering method
-- **GSF variants** — test alternative frequency weighting and gating designs
-- **CWA / Non-local U-Net** — benchmark alternative feature and global-context modeling strategies
-
 ---
 
 ### Key Design Decisions
 
-| Component | Design Choice | Rationale |
+| Area | Decision | Engineering Rationale |
 |---|---|---|
-| **Backbone** | 8 slices, 32 base channels, GroupNorm | Stable 3D feature extraction for small-batch training |
-| **Graph Representation** | 128 nodes, KNN `k=4` | Capture long-range dependencies with manageable graph size |
-| **Graph Propagation** | 2× GraphConv + residual connections | Aggregate relational features while preserving node information |
-| **GSF** | GFT + Frequency SE | Reweight graph-frequency components before message passing |
-| **Ablations** | GAP / RMSP / soft gate | Isolate frequency descriptor and filtering design choices |
+| **3D Backbone** | 8 slices · 32 base channels · GroupNorm | Improve cross-slice context and stabilize small-batch training |
+| **Graph Representation** | 128 nodes · KNN `k=4` | Balance long-range modeling with graph complexity |
+| **Message Passing** | 2× GraphConv + residual connections | Aggregate relational context while preserving node features |
+| **Graph Filtering** | GFT + Frequency SE | Adapt graph-frequency contributions before propagation |
 
 ### Technical Highlights
 
-- **Designed a shared 3D Attention U-Net backbone** with GroupNorm, ASPP, depth-dilated Conv3D, and attention-gated skip connections for multi-scale and cross-slice feature extraction.
-- **Compressed multi-scale CNN features into 128 graph nodes** and built a `k=4` KNN graph for explicit long-range message passing with two residual GraphConv layers.
-- **Developed Graph Structural Filtering (GSF)** using Graph Fourier Transform and Frequency Squeeze-and-Excitation to adaptively reweight graph-frequency components before propagation.
-- **Built controlled ablation and comparison models** across GAP, RMSP, soft gating, CWA, and Non-local attention to isolate the contribution of each architectural choice.
+- **Designed a 3D Attention U-Net backbone** with multi-scale and cross-slice feature extraction using ASPP, depth-dilated Conv3D, and attention-gated skip connections.
+- **Built a compact graph representation** from multi-scale CNN features using 128 nodes, KNN connectivity, and residual GraphConv for long-range dependency modeling.
+- **Developed Graph Structural Filtering (GSF)** with Graph Fourier Transform and Frequency SE to adaptively reweight graph-frequency components before message passing.
+
+**Validation design:** GAP vs. RMSP vs. soft gating, with CWA and Non-local attention as alternative modeling baselines.
 
 ### Architecture Pipeline
 
@@ -270,13 +246,9 @@ flowchart LR
 
 **How it works:** The backbone first extracts **3D spatial and cross-slice features**. These features are compressed into a **128-node KNN graph** to model long-range relationships. GSF then **reweights graph-frequency information before message passing**, and the refined graph features are decoded into the final segmentation mask.
 
-### Comparison Baselines
-
-**CWA U-Net** provides image-space feature reweighting, while **Non-local U-Net** provides graph-free global attention for comparison against the graph-based GCN / GSF models.
-
 ### Impact
 
-- Built a **controlled architecture framework** that isolates the contributions of 3D feature extraction, graph message passing, and graph-frequency filtering.
+- Established a controlled model design that separates the effects of the **3D backbone, graph message passing, and spectral filtering**.
 - **GSF_GAP U-Net achieved the highest mean 3D Dice of 0.834**, outperforming both the U-Net and GCN baselines.
 
 [Model Design Deep Dive →](docs/04_model_design.md)
