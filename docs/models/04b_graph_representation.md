@@ -2,6 +2,8 @@
 
 [← Model Design Hub](../04_model_design.md) · [← Backbone](04a_shared_backbone.md)
 
+> **Goal:** Convert dense 3D CNN features into a compact graph and test the value of explicit long-range message passing.
+
 The GCN baseline extends the shared 3D CNN backbone with an explicit graph representation so feature-similar regions can exchange information even when they are far apart in the original image grid.
 
 ## 1. Why Add a Graph?
@@ -173,7 +175,7 @@ That question motivates Graph Structural Filtering in the next stage.
 
 ---
 
-## Engineering Takeaways
+## Key Takeaways
 
 - Converted dense multi-scale CNN features into a compact **128-node graph representation**.
 - Preserved all **8 slices** during graph pooling with a depth pooling factor of `1`.
