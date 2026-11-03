@@ -154,28 +154,7 @@ Adding graph-frequency decomposition and adaptive reweighting before GraphConv p
 
 ---
 
-## 6. Full Model Results
-
-| Model | 3D Dice | Precision | Recall | IoU |
-|---|---:|---:|---:|---:|
-| **U-Net** | 0.818 ± 0.041 | 0.790 ± 0.048 | **0.861 ± 0.029** | 0.691 ± 0.049 |
-| **GCN U-Net** | 0.823 ± 0.044 | 0.806 ± 0.042 | 0.847 ± 0.028 | 0.694 ± 0.054 |
-| **CWA U-Net** | 0.819 ± 0.048 | 0.803 ± 0.044 | 0.843 ± 0.043 | 0.689 ± 0.059 |
-| **Non-local U-Net** | 0.812 ± 0.040 | 0.784 ± 0.026 | 0.850 ± 0.036 | 0.680 ± 0.046 |
-| **GSF_GAP U-Net** | **0.834 ± 0.033** | 0.814 ± 0.036 | 0.848 ± 0.028 | **0.703 ± 0.039** |
-| **GSF_RMSP U-Net** | 0.827 ± 0.038 | **0.824 ± 0.032** | 0.834 ± 0.035 | 0.698 ± 0.046 |
-| **Gated GSF_GAP U-Net** | 0.830 ± 0.043 | 0.822 ± 0.046 | 0.843 ± 0.044 | **0.703 ± 0.056** |
-
-The best model depends on what behavior is prioritized:
-
-- **GSF_GAP:** best overall Dice and one of the highest IoU values.
-- **GSF_RMSP:** highest Precision.
-- **U-Net:** highest Recall.
-- **Gated GSF_GAP:** high Precision and IoU, but no additional Dice gain.
-
----
-
-## 7. Prediction Behavior
+## 6. Prediction Behavior
 
 The GSF variants changed the model's behavior more than they changed the overall ranking.
 
@@ -198,7 +177,7 @@ That shift increased Precision to **0.824**, but Recall dropped to **0.834**.
 
 ---
 
-## 8. Reliability Checks
+## 7. Reliability Checks
 
 ### Repeated Testing
 
@@ -229,7 +208,7 @@ The differences among the GSF variants were not strong enough to support clear s
 
 ---
 
-## 9. Failure Analysis
+## 8. Failure Analysis
 
 Quantitative performance alone did not explain where architecture changes helped or where all models still struggled.
 
@@ -245,7 +224,7 @@ These visual examples are used as **supporting evidence**, not as a substitute f
 
 ---
 
-## 10. What the Results Support
+## 9. What the Results Support
 
 The experiments support three practical conclusions:
 
