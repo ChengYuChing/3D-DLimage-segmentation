@@ -15,8 +15,45 @@
 | **1. Problem Definition** | Coronary OCT calcification is difficult to segment because of weak signals, artifacts, limited 2D context, and complex lesion boundaries | Translated imaging failure modes into clear requirements for **robustness, wider spatial context, and boundary quality** | Established the technical direction for the full ML pipeline | Problem Framing, Medical Imaging, Segmentation |
 | **2. Data Preparation** | Raw clinical OCT scans, metadata, and physician annotations were not directly usable for model training | Built a structured workflow to ingest **34,954 frames**, convert clinical annotations into pixel-level masks, and preserve pullback sequence information | Created a standardized segmentation dataset linking images, labels, metadata, and frame order | Data Engineering, DICOM, Annotation Processing, Dataset Design |
 | **3. Preprocessing Pipeline** | Standardized OCT frames still contained imaging noise, artifacts, signal loss, and limited longitudinal context | Built a domain-specific pipeline for **lumen noise removal, polar transformation, guidewire-shadow handling, signal enhancement, augmentation, and 3D VoI construction** | Transformed **704×704 OCT frames into standardized 256×256×8 3D inputs with longitudinal context** | Image Processing, MATLAB, Data Augmentation, 3D Data Pipeline |
-| **4. Model Design** | Standard 3D CNNs mainly capture local patterns and may miss wider structural relationships | Built a shared **3D Attention U-Net backbone**, then evaluated **graph message passing, Graph Structural Filtering, and alternative global-context baselines** | Identified **GSF_GAP** as the strongest overall model with mean **3D Dice 0.834** | Deep Learning, 3D CNN, GNN, Architecture Design |
-| **5. Evaluation & Results** | Model improvements needed to be validated across full vessels and repeated experiments rather than individual VoIs or one favorable split | Reconstructed overlapping VoI predictions into full-vessel masks and evaluated models using **Dice, Precision, Recall, IoU, and statistical testing** | Achieved best mean **Dice 0.834** and **IoU 0.703**, while identifying precision–recall trade-offs across architectures | Experiment Design, Statistical Testing, Model Evaluation |
+| **4. Model Design** | Standard 3D CNNs mainly capture local patterns and may miss wider structural relationships | Built a shared **3D Attention U-Net backbone**, then evaluated **graph message passing, Graph Structural Filtering, and alternative global-context baselines** | **GSF_GAP** achieved the highest mean **3D Dice of 0.834** | Deep Learning, 3D CNN, GNN, Architecture Design |
+| **5. Model Validation & Results** | Model improvements needed to be validated at the vessel level across repeated experiments rather than individual VoIs or one favorable split | Aggregated overlapping VoI predictions into vessel-level outputs and evaluated models using **Dice, Precision, Recall, IoU, and paired analysis** | Achieved best mean **Dice 0.834** and **IoU 0.703**, while identifying precision–recall trade-offs across architectures | Experiment Design, Statistical Testing, Model Evaluation |
+
+---
+
+## End-to-End System Overview
+
+```mermaid
+flowchart TB
+    A["Clinical OCT + Physician Annotations"]
+    B["P2 · Data Preparation<br/>DICOM · Masks · Sequence Mapping"]
+    C["P3 · Preprocessing<br/>Polar Transform · Artifact Handling · Signal Enhancement"]
+    D["3D Inputs<br/>256×256×8"]
+    E["P4 · Shared 3D Attention U-Net Backbone"]
+
+    U["U-Net<br/>Image Baseline"]
+    G["GCN U-Net<br/>Graph Baseline"]
+    S["GSF_GAP U-Net<br/>Main Method"]
+    V["GSF Variants<br/>RMSP · Soft Gating"]
+    X["Comparison Models<br/>CWA · Non-local"]
+
+    F["P5 · Vessel-level Evaluation<br/>3 Disjoint Test Sets · 134 Vessels"]
+    R["Dice · Precision · Recall · IoU"]
+
+    A --> B --> C --> D --> E
+    E --> U
+    E --> G --> S
+    S --> V
+    E -. "alternative strategies" .-> X
+
+    U --> F
+    G --> F
+    S --> F
+    V --> F
+    X --> F
+    F --> R
+```
+
+**System logic:** clinical data are converted into standardized 3D inputs, processed through a controlled model family, and compared under the same vessel-level validation framework. The main research path progresses from **3D CNN features → graph message passing → Graph Structural Filtering**.
 
 ---
 
@@ -37,26 +74,6 @@ Defined the task as a **3D medical image segmentation problem** so the model cou
 
 **Impact**
 - **Established a clear technical direction for the full ML pipeline**, turning clinical imaging challenges into specific decisions for preprocessing, 3D input design, graph-based modeling, and evaluation.
-
-**Architecture / Workflow**
-
-```mermaid
-flowchart LR
-    A["OCT Challenges"] --> B["Weak Signals & Artifacts"]
-    A --> C["Limited 2D Context"]
-    A --> D["Complex Boundaries"]
-
-    B --> E["Robust Preprocessing"]
-    C --> F["3D Input Design"]
-    C --> G["Graph-based Modeling"]
-    D --> G
-    D --> H["Multi-metric Evaluation"]
-
-    E --> I["End-to-End Segmentation Pipeline"]
-    F --> I
-    G --> I
-    H --> I
-```
 
 [Deep Dive →](docs/01_problem.md)
 
@@ -249,7 +266,7 @@ flowchart LR
 ### Impact
 
 - Established a controlled model design that separates the effects of the **3D backbone, graph message passing, and Graph Structural Filtering**.
-- **GSF_GAP U-Net achieved the highest mean 3D Dice of 0.834**, outperforming both the U-Net and GCN baselines.
+- **GSF_GAP U-Net achieved the highest mean 3D Dice of 0.834**, higher than the U-Net and GCN baselines under the same evaluation setup.
 
 [Model Design Deep Dive →](docs/04_model_design.md)
 
