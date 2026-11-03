@@ -1,6 +1,8 @@
-# 02. Data Preparation
+# P2 — Data Preparation
 
-> **Goal:** Turn raw clinical OCT images, metadata, and physician annotations into an ordered and aligned segmentation dataset for downstream 3D modeling.
+[← Back to README](../README.md#p2--data-preparation) · [← Problem Definition](01_problem.md)
+
+> **Goal:** Turn raw OCT images, metadata, and ground-truth annotations into an ordered and aligned dataset for downstream 3D modeling.
 
 ---
 
@@ -129,10 +131,20 @@ Each frame retains:
 
 ### Why It Matters
 
-P2 establishes the **data contract** for the rest of the system.
+P2 establishes the **data contract** for the rest of the system: every image is linked to its mask, sequence position, and pullback identity before preprocessing begins.
 
-The next stage can focus entirely on image transformation and 3D input construction without redefining the underlying dataset.
+---
 
-**P2: Structure the data → P3: Transform the data**
+## Key Takeaways
 
-[Next: Preprocessing Pipeline →](03_pipeline.md)
+- Structured **34,954 frames** into ordered image–mask sequences instead of treating them as independent images.
+- Preserved both **spatial alignment** and **longitudinal sequence structure** required for 3D modeling.
+- Separated data organization from image transformation, creating a clean handoff from P2 to P3.
+
+---
+
+## Next
+
+Transform the ordered sequences into standardized, context-aware 3D model inputs:
+
+**[P3 — Preprocessing Pipeline →](03_pipeline.md)**
