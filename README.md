@@ -12,11 +12,11 @@
 
 | Workstream | Core Challenge | Engineering Response | Outcome |
 |---|---|---|---|
-| **P1 — Problem Definition** | Weak signals · artifacts · limited 2D context | Defined requirements for **robustness, spatial context, and boundary quality** | Set the technical direction for the full ML pipeline |
-| **P2 — Data Preparation** | Images, metadata, and labels were disconnected | Structured **34,954 frames** with masks and sequence mapping | Built an ordered, model-ready dataset |
-| **P3 — Preprocessing Pipeline** | Noise, artifacts, and weak deep-tissue signals | Polar transform · artifact handling · signal enhancement · 8-slice VoIs | Produced standardized **256×256×8** 3D inputs |
-| **P4 — Model Design** | Local CNN features alone may miss long-range structure | Built a controlled **3D U-Net → GCN → GSF** model family | **GSF_GAP** achieved the highest mean Dice: **0.834** |
-| **P5 — Model Validation & Results** | Single splits and VoI-level scores can mislead | Used **3 disjoint test sets**, vessel-level aggregation, and multi-metric evaluation | Best mean **Dice 0.834** · **IoU 0.703** + trade-off analysis |
+| **[P1 — Problem Definition](#p1--problem-definition)** | Weak signals · artifacts · limited 2D context | Defined requirements for **robustness, spatial context, and boundary quality** | Set the technical direction for the full ML pipeline |
+| **[P2 — Data Preparation](#p2--data-preparation)** | Images, metadata, and labels were disconnected | Structured **34,954 frames** with masks and sequence mapping | Built an ordered, model-ready dataset |
+| **[P3 — Preprocessing Pipeline](#p3--preprocessing-pipeline)** | Noise, artifacts, and weak deep-tissue signals | Polar transform · artifact handling · signal enhancement · 8-slice VoIs | Produced standardized **256×256×8** 3D inputs |
+| **[P4 — Model Design](#p4--model-design)** | Local CNN features alone may miss long-range structure | Built a controlled **3D U-Net → GCN → GSF** model family | **GSF_GAP** achieved the highest mean Dice: **0.834** |
+| **[P5 — Model Validation & Results](#p5--model-validation--results)** | Single splits and VoI-level scores can mislead | Used **3 disjoint test sets**, vessel-level aggregation, and multi-metric evaluation | Best mean **Dice 0.834** · **IoU 0.703** + trade-off analysis |
 
 ---
 
