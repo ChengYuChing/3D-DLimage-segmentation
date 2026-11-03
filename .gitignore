@@ -218,3 +218,30 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+# Research / clinical data
+data/
+datasets/
+*.dcm
+*.dicom
+*.mat
+
+# Model artifacts
+weights/
+checkpoints/
+*.h5
+*.hdf5
+*.ckpt
+*.pb
+
+# Experiment outputs
+results/
+outputs/
+logs/
+*.csv
+*.xlsx
+
+# Local project paths / temporary exports
+private/
+local/
