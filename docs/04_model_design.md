@@ -2,7 +2,7 @@
 
 [← Back to README](../README.md#p4--model-design)
 
-This project uses a **shared 3D segmentation backbone** and a controlled set of graph, Graph Structural Filtering, and comparison modules to study how long-range context should be represented and propagated.
+This project uses a **shared 3D segmentation backbone** with graph-based modeling, Graph Structural Filtering, and comparison baselines to study how long-range context should be represented and propagated.
 
 ## Model Design Strategy
 
@@ -27,7 +27,7 @@ The design progression is:
 
 > **3D feature extraction → explicit graph relations → Graph Structural Filtering**
 
-The backbone is kept fixed across downstream models so architectural comparisons focus on the added relational and structural-filtering components.
+The backbone is kept fixed across downstream models so architectural comparisons focus on differences in relational modeling and structural filtering.
 
 ---
 
