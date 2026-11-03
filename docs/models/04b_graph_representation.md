@@ -167,7 +167,7 @@ GCN U-Net is not only another model variant. It establishes the reference point 
 
 This progression isolates the question:
 
-> **Does improving the graph representation before propagation add value beyond standard GCN message passing?**
+> **Does refining graph features before propagation add value beyond standard GCN message passing?**
 
 That question motivates Graph Structural Filtering in the next stage.
 
@@ -188,6 +188,6 @@ That question motivates Graph Structural Filtering in the next stage.
 
 ## Next
 
-The GCN baseline propagates all graph information through the constructed graph. The next stage adds **Graph Structural Filtering** before message passing:
+The GCN baseline performs message passing on the constructed graph without frequency-aware feature refinement. The next stage adds **Graph Structural Filtering** before message passing:
 
 **[04c — Graph Structural Filtering →](04c_graph_structural_filtering.md)**
