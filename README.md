@@ -292,31 +292,33 @@ flowchart LR
 
 ## Key Engineering Takeaways
 
-_TODO_
+- **Built an end-to-end 3D medical imaging pipeline**, transforming clinical OCT data and physician annotations into structured, model-ready volumetric inputs.
+- **Designed models through controlled architecture progression** — from a shared 3D CNN backbone to graph message passing and Graph Structural Filtering — rather than comparing unrelated architectures.
+- **Connected CNN and graph representations in one segmentation system**, using compact graph construction, long-range message passing, and graph-frequency feature reweighting.
+- **Built a whole-vessel validation framework** with repeated test sets, reconstruction of overlapping predictions, multi-metric evaluation, and paired model comparisons.
+- **Used model behavior and failure analysis to guide conclusions**, distinguishing overall overlap, false-positive control, lesion coverage, and remaining image-quality limitations.
 
 ---
 
 ## Tech Stack
 
-| Area | Technologies |
+| Area | Technologies / Methods |
 |---|---|
-| Programming | _TODO_ |
-| Deep Learning | _TODO_ |
-| Graph Learning | _TODO_ |
-| Image Processing | _TODO_ |
-| Experimentation | _TODO_ |
-| Visualization | _TODO_ |
-| Compute / Engineering | _TODO_ |
+| **Programming & Modeling** | Python · TensorFlow · Keras · MATLAB |
+| **Deep Learning** | 3D U-Net · Attention U-Net · Conv3D · GroupNorm · ASPP |
+| **Graph Learning** | KNN Graph · GCN · GraphConv · Graph Laplacian · Graph Fourier Transform · Frequency SE |
+| **Image Processing** | DICOM Processing · Polar Transformation · Artifact Removal · Signal Enhancement · Data Augmentation |
+| **Experimentation** | Whole-vessel Reconstruction · 3D Dice · Precision · Recall · IoU · Paired Statistical Testing |
 
 ---
 
 ## Context / Disclaimer
 
 **Project Context**  
-_TODO_
+This repository summarizes my master's research in biomedical engineering at National Taiwan University, focused on 3D deep learning and graph-based modeling for coronary OCT calcification segmentation.
 
 **Data Privacy**  
-_TODO_
+Raw clinical OCT data, patient-identifiable information, and physician annotation files are not included in this repository.
 
 **Repository Scope**  
-_TODO_
+This portfolio contains sanitized technical descriptions, architecture designs, aggregated experimental results, and publication-safe examples. Restricted research code and non-public clinical materials are intentionally omitted.
