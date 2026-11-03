@@ -229,6 +229,28 @@ flowchart LR
 
 ---
 
+## Repository Structure
+
+```text
+.
+├── README.md
+└── docs/
+    ├── 01_problem.md
+    ├── 02_data.md
+    ├── 03_pipeline.md
+    ├── 04_model_design.md
+    ├── 05_experiments_results.md
+    └── models/
+        ├── 04a_shared_backbone.md
+        ├── 04b_graph_representation.md
+        ├── 04c_graph_structural_filtering.md
+        └── 04d_comparison_models.md
+```
+
+**How to navigate:** start with the README for the end-to-end engineering story, then use the deep dives for implementation decisions, model architecture, and validation evidence.
+
+---
+
 ## Project Context & Repository Scope
 
 - **Context:** Master's research in biomedical engineering at National Taiwan University, focused on 3D deep learning and graph-based modeling for coronary OCT segmentation.
