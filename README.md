@@ -223,13 +223,13 @@ flowchart LR
     A -. "Alternative global modeling" .-> G["Non-local U-Net"]
 ```
 
-The hierarchy is intentional:
+Each model has a clear role:
 
-- **U-Net** establishes the shared image-space baseline.
-- **GCN U-Net** isolates the value of graph representation and message passing.
-- **GSF_GAP U-Net** tests whether graph-frequency processing can improve the representation before GraphConv.
-- **GSF variants** test specific design choices inside the proposed method.
-- **CWA and Non-local U-Net** provide alternative comparison strategies rather than steps in the GSF evolution.
+- **U-Net** — 3D image baseline
+- **GCN U-Net** — graph message-passing baseline
+- **GSF_GAP U-Net** — main graph-frequency filtering method
+- **GSF variants** — test alternative frequency weighting and gating designs
+- **CWA / Non-local U-Net** — benchmark alternative feature and global-context modeling strategies
 
 ---
 
