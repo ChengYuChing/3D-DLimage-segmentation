@@ -31,25 +31,31 @@ Coronary calcification is difficult to segment in OCT because lesion boundaries 
 Defined the task as a **3D medical image segmentation problem** so the model could use both each OCT frame and nearby frames. This led to three main design goals: handle weak-signal regions better, capture wider spatial context, and improve boundary segmentation.
 
 **Technical Highlights**
-- Identified key failure modes: **low contrast, signal attenuation, guidewire artifacts, and large differences in lesion shape and size**.
-- Used a **3D segmentation setup** instead of treating each OCT frame independently.
-- Used these failure modes to guide the later preprocessing, graph-based model design, and evaluation strategy.
+- **Translated real OCT failure modes into concrete model requirements:** robustness to weak signals and artifacts, stronger spatial-context modeling, and accurate boundary segmentation.
+- **Moved beyond frame-by-frame segmentation by designing a 3D input setup**, allowing the model to learn lesion continuity across neighboring OCT slices.
+- **Built the technical roadmap around these constraints**, connecting preprocessing, 3D volume construction, graph-based feature modeling, and evaluation into one end-to-end segmentation workflow.
 
 **Impact**
-- Turned the clinical imaging challenge into clear engineering requirements for the **data pipeline, model architecture, and evaluation setup**.
+- **Established a clear technical direction for the full ML pipeline**, turning clinical imaging challenges into specific decisions for preprocessing, 3D input design, graph-based modeling, and evaluation.
 
 **Architecture / Workflow**
 
 ```mermaid
 flowchart LR
-    A["Coronary OCT"] --> B["Low Contrast / Weak Signals"]
-    A --> C["Artifacts"]
-    A --> D["Different Lesion Shapes & Sizes"]
-    B --> E["Segmentation Challenges"]
-    C --> E
-    D --> E
-    E --> F["3D Context + Better Boundary Modeling"]
-    F --> G["Model & Evaluation Requirements"]
+    A["OCT Challenges"] --> B["Weak Signals & Artifacts"]
+    A --> C["Limited 2D Context"]
+    A --> D["Complex Boundaries"]
+
+    B --> E["Robust Preprocessing"]
+    C --> F["3D Input Design"]
+    C --> G["Graph-based Modeling"]
+    D --> G
+    D --> H["Multi-metric Evaluation"]
+
+    E --> I["End-to-End Segmentation Pipeline"]
+    F --> I
+    G --> I
+    H --> I
 ```
 
 [Deep Dive →](docs/01_problem.md)
