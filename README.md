@@ -1,1 +1,1 @@
-# 3D-Deep-Learning-Medical-AI-Image-Segmentation
+# 3D Deep Learning - Medical AI Image Segmentation
