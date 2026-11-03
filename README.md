@@ -14,7 +14,7 @@
 |---|---|---|---|---|
 | **1. Problem Definition** | Coronary OCT calcification is difficult to segment because of weak signals, artifacts, limited 2D context, and complex lesion boundaries | Translated imaging failure modes into clear requirements for **robustness, wider spatial context, and boundary quality** | Established the technical direction for the full ML pipeline | Problem Framing, Medical Imaging, Segmentation |
 | **2. Data Preparation** | Raw clinical OCT scans, metadata, and physician annotations were not directly usable for model training | Built a structured workflow to ingest **34,954 frames**, convert clinical annotations into pixel-level masks, and preserve pullback sequence information | Created a standardized segmentation dataset linking images, labels, metadata, and frame order | Data Engineering, DICOM, Annotation Processing, Dataset Design |
-| **3. Preprocessing Pipeline** | Standardized OCT frames still contained imaging noise, artifacts, signal loss, and limited longitudinal context | Built a domain-specific pipeline for **lumen noise removal, polar transformation, guidewire-shadow handling, signal enhancement, augmentation, and 3D VoI construction** | Converted raw **704×704 OCT frames into 256×256×8 model-ready 3D volumes** | Image Processing, MATLAB, Data Augmentation, 3D Data Pipeline |
+| **3. Preprocessing Pipeline** | Standardized OCT frames still contained imaging noise, artifacts, signal loss, and limited longitudinal context | Built a domain-specific pipeline for **lumen noise removal, polar transformation, guidewire-shadow handling, signal enhancement, augmentation, and 3D VoI construction** | Transformed **704×704 OCT frames into standardized 256×256×8 3D inputs with longitudinal context** | Image Processing, MATLAB, Data Augmentation, 3D Data Pipeline |
 | **4. Model Design** | Standard 3D CNNs mainly capture local patterns and may miss wider structural relationships | Developed and compared **3D U-Net, attention, GCN, graph structural filtering, gated fusion, and non-local** architectures | Identified **GSF_GAP** as the strongest overall model with mean **3D Dice 0.834** | Deep Learning, 3D CNN, GNN, Architecture Design |
 | **5. Evaluation & Results** | Model improvements needed to be validated across full vessels and repeated experiments rather than individual VoIs or one favorable split | Reconstructed overlapping VoI predictions into full-vessel masks and evaluated models using **Dice, Precision, Recall, IoU, and statistical testing** | Achieved best mean **Dice 0.834** and **IoU 0.703**, while identifying precision–recall trade-offs across architectures | Experiment Design, Statistical Testing, Model Evaluation |
 
@@ -92,19 +92,17 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A["Raw OCT DICOM"] --> C["Data Ingestion"]
-    B["Physician Annotations"] --> C
+    A["Raw OCT DICOM"] --> C["DICOM + Metadata Ingestion"]
+    B["Clinical Annotations"] --> D["Annotation Parsing"]
 
-    C --> D["Metadata & Frame Mapping"]
-    C --> E["Annotation-to-Mask Conversion"]
+    C --> E["Frame & Pullback Mapping"]
+    D --> F["Pixel-level Mask Construction"]
 
-    D --> F["Ordered Pullback Sequences"]
-    E --> G["Pixel-level Labels"]
+    E --> G["Image–Label Alignment"]
+    F --> G
 
-    F --> H["Standardized Segmentation Dataset"]
-    G --> H
-
-    H --> I["Preprocessing Pipeline"]
+    G --> H["Ordered OCT Sequences"]
+    H --> I["P3: Preprocessing"]
 ```
 
 [Deep Dive →](docs/02_data.md)
@@ -127,7 +125,7 @@ flowchart LR
 | Decision | What I Built |
 |---|---|
 | **Clean the signal** | Removed lumen-region noise before downstream processing |
-| **Normalize the geometry** | Converted Cartesian OCT frames to a 256×256 polar representation and introduced center-shift augmentation during transformation |
+| **Normalize & vary the geometry** | Converted Cartesian OCT frames to a 256×256 polar representation and generated center-shift variations during transformation |
 | **Refine tissue features** | Removed guidewire shadows and enhanced weak deep-tissue signals |
 | **Build 3D context** | Constructed overlapping 8-slice 3D VoIs with stride 3 |
 
