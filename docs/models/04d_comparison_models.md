@@ -13,7 +13,7 @@ They represent two alternative ways to improve context modeling without using th
 | **CWA U-Net** | Image feature maps | Feature grouping and reweighting | No |
 | **Non-local U-Net** | Dense bottleneck feature map | All-to-all global attention | No |
 | **GCN U-Net** | 128-node graph | KNN message passing | Yes |
-| **GSF U-Net** | Graph + frequency | Graph Structural Filtering + message passing | Yes |
+| **GSF family** | Graph + frequency | Graph Structural Filtering + message passing | Yes |
 
 The evaluation covers four parallel modeling strategies:
 
@@ -106,7 +106,7 @@ The comparison models answer different questions rather than forming one archite
 | **CWA U-Net** | Does image-space feature reweighting improve the representation? |
 | **Non-local U-Net** | Does dense global attention improve long-range context? |
 | **GCN U-Net** | Does structured graph message passing help? |
-| **GSF U-Net** | Does structural filtering before message passing further refine the graph representation? |
+| **GSF_GAP U-Net** | Does Graph Structural Filtering refine graph features before message passing? |
 
 This makes the final evaluation more informative than a simple **CNN vs. GNN** comparison.
 
@@ -133,6 +133,6 @@ This distinction is important when interpreting the results in P5.
 
 ## Next
 
-With the model family defined, the next stage evaluates performance across repeated experiments and full-vessel reconstruction:
+With the model family defined, the next stage evaluates performance across repeated experiments and vessel-level prediction aggregation:
 
-**[P5 — Experiment & Results →](../05_experiments_results.md)**
+**[P5 — Model Validation & Results →](../05_experiments_results.md)**
