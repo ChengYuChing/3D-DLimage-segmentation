@@ -1,10 +1,10 @@
-# 04. Model Design
+# P4 — Model Design
 
-[← Back to README](../README.md#p4--model-design)
+[← Back to README](../README.md#p4--model-design) · [← Preprocessing Pipeline](03_pipeline.md)
 
-This project uses a **shared 3D segmentation backbone** with graph-based modeling, Graph Structural Filtering, and comparison baselines to study how long-range context should be represented and propagated.
+> **Goal:** Compare model strategies under a shared 3D backbone so the value of graph message passing and Graph Structural Filtering can be evaluated without changing the underlying input pipeline.
 
-## Model Design Strategy
+## 1. Model Design Strategy
 
 ```mermaid
 flowchart LR
@@ -31,7 +31,7 @@ The backbone is kept fixed across downstream models so architectural comparisons
 
 ---
 
-## Model Taxonomy
+## 2. Model Taxonomy
 
 | Model | Role | What It Tests |
 |---|---|---|
@@ -45,7 +45,7 @@ The backbone is kept fixed across downstream models so architectural comparisons
 
 ---
 
-## Shared Architecture Principle
+## 3. Shared Architecture Principle
 
 All core models use the same selected **3D Attention U-Net backbone**:
 
@@ -62,7 +62,7 @@ This shared backbone provides a controlled starting point before graph-specific 
 
 ---
 
-## Technical Deep Dives
+## 4. Technical Deep Dives
 
 | Topic | Engineering Focus | Deep Dive |
 |---|---|---|
@@ -73,7 +73,7 @@ This shared backbone provides a controlled starting point before graph-specific 
 
 ---
 
-## What the Experiments Isolate
+## 5. What the Experiments Isolate
 
 The model family is structured to separate four questions:
 
@@ -83,6 +83,14 @@ The model family is structured to separate four questions:
 4. **Design choice:** How do GAP, RMSP, and soft gating change the GSF behavior?
 
 CWA and Non-local U-Net provide alternative non-graph comparison strategies so the evaluation is not limited to CNN-versus-GNN comparisons.
+
+---
+
+## Key Takeaways
+
+- Kept the **3D backbone fixed** so downstream comparisons focus on relational modeling rather than unrelated architecture changes.
+- Structured the main progression as **U-Net → GCN U-Net → GSF_GAP U-Net**.
+- Used CWA and Non-local U-Net as alternative non-graph strategies, making the comparison about **representation and interaction design**, not only model names.
 
 ---
 
