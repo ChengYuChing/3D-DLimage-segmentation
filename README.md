@@ -254,42 +254,21 @@ Each model has a clear role:
 
 ```mermaid
 flowchart LR
-    X["3D OCT Volume<br/>256×256×8×1"]
+    A["3D OCT Input<br/>256×256×8×1"]
+    B["① Extract 3D Features<br/>3D Attention U-Net"]
+    C["② Build Relational Graph<br/>128 nodes · KNN k=4"]
+    D["③ Filter Graph Signals<br/>GFT · Frequency SE · Reweighting"]
+    E["④ Propagate Long-range Context<br/>2× GraphConv"]
+    F["⑤ Decode Segmentation<br/>3D Decoder"]
 
-    subgraph B["3D Feature Backbone"]
-        B1["3D Attention U-Net"]
-        B2["Multi-scale Features<br/>ASPP + Depth-aware Conv3D"]
-        B1 --> B2
-    end
-
-    subgraph G["Graph Representation"]
-        G1["Graph Projection<br/>4×4×8 = 128 Nodes"]
-        G2["KNN Graph<br/>k = 4"]
-        G1 --> G2
-    end
-
-    subgraph S["Graph Structural Filtering"]
-        S1["Graph Fourier Transform"]
-        S2["Frequency SE"]
-        S3["Spectral Reweighting<br/>+ Residual Fusion"]
-        S1 --> S2 --> S3
-    end
-
-    M["2× GraphConv<br/>Message Passing"]
-    D["Segmentation Decoder"]
-
-    X --> B1
-    B2 --> G1
-    G2 --> S1
-    S3 --> M
-    M --> D
+    A --> B
+    B -->|"multi-scale features"| C
+    C -->|"graph features"| D
+    D -->|"filtered features"| E
+    E -->|"context-aware features"| F
 ```
 
-| Stage | Engineering Role |
-|---|---|
-| **3D Feature Backbone** | Extract multi-scale spatial and cross-slice features |
-| **Graph Representation** | Compress CNN features into a compact relational graph |
-| **Graph Structural Filtering** | Reweight graph-frequency components before message passing |
+**How it works:** The backbone first extracts **3D spatial and cross-slice features**. These features are compressed into a **128-node KNN graph** to model long-range relationships. GSF then **reweights graph-frequency information before message passing**, and the refined graph features are decoded into the final segmentation mask.
 
 ### Comparison Baselines
 
