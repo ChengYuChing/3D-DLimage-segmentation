@@ -4,7 +4,7 @@
 
 The validation stage was designed to answer one engineering question:
 
-> **Do the added graph and structural-filtering components improve the final whole-vessel segmentation in a controlled and repeatable way?**
+> **Do the added graph and structural-filtering components improve the final vessel-level segmentation in a controlled and repeatable way?**
 
 Rather than relying on a single split or individual 3D VoIs, all models were evaluated under the same data conditions and scored after reconstructing complete vessels.
 
@@ -27,7 +27,7 @@ The evaluation therefore focused on four questions:
 
 ## 2. Controlled Experiment Design
 
-Whole-vessel cases were shuffled into **10 mutually exclusive groups**.
+Vessel-level cases were shuffled into **10 mutually exclusive groups**.
 
 Three different groups were reserved as independent test sets:
 
@@ -48,7 +48,7 @@ For each experiment:
 
 ```mermaid
 flowchart LR
-    A["Whole-vessel Cases"]
+    A["Vessel-level Cases"]
     B["10 Disjoint Groups"]
     C1["Test 1<br/>45 vessels"]
     C2["Test 2<br/>43 vessels"]
@@ -81,7 +81,7 @@ flowchart LR
 
 ---
 
-## 3. Whole-vessel Validation Pipeline
+## 3. Vessel-level Evaluation Pipeline
 
 The model predicts overlapping **8-slice VoIs with stride 3**, so multiple VoIs can produce predictions for the same original slice.
 
@@ -94,7 +94,7 @@ flowchart LR
     C["Map Back to<br/>Original Slice Indices"]
     D["Average Overlapping<br/>Predictions"]
     E["Threshold<br/>0.5"]
-    F["Whole-vessel<br/>Prediction"]
+    F["Final Vessel<br/>Prediction"]
     G["Dice · Precision<br/>Recall · IoU"]
 
     A --> B --> C --> D --> E --> F --> G
@@ -229,7 +229,7 @@ These visual examples are used as **supporting evidence**, not as a substitute f
 The experiments support three practical conclusions:
 
 1. **Graph modeling provided incremental value** over the shared 3D CNN baseline.
-2. **Graph Structural Filtering produced the strongest architecture-stage improvement** in mean whole-vessel Dice.
+2. **Graph Structural Filtering produced the strongest architecture-stage improvement** in mean vessel-level Dice.
 3. **More aggressive frequency selection did not automatically improve the final result**; RMSP and soft gating mainly shifted the Precision–Recall trade-off.
 
 The results do **not** establish that graph-based architectures are universally superior to all global-attention methods or that GSF_GAP is definitively superior to every GSF variant.
@@ -239,7 +239,7 @@ The results do **not** establish that graph-based architectures are universally 
 ## Engineering Takeaways
 
 - Built a controlled validation framework where architecture changes were evaluated under the same data and training conditions.
-- Evaluated the **final reconstructed whole-vessel output**, not overlapping VoIs as independent samples.
+- Evaluated the **final vessel-level output**, not overlapping VoIs as independent samples.
 - Used repeated test groups to expose ranking changes that a single split could hide.
 - Combined overlap metrics with Precision and Recall to understand **how** architecture changes affected predictions.
 - Used paired case-level analysis to support model comparisons while keeping statistical claims within the limits of the experiment.
