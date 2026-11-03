@@ -245,11 +245,43 @@ See the deep dive for experiment design, paired comparisons, and failure analysi
 
 ---
 
+## Selected Code Samples
+
+These files are **sanitized portfolio implementations** extracted from the research workflow. They demonstrate the main engineering ideas without exposing raw clinical data, private file paths, full training infrastructure, or restricted unpublished code.
+
+| Area | Code Sample | What It Demonstrates |
+|---|---|---|
+| **Preprocessing** | [`polar_transform.py`](src/preprocessing/polar_transform.py) | Generic Cartesian-to-polar image transformation |
+| **3D Input Construction** | [`volume_builder.py`](src/preprocessing/volume_builder.py) | Overlapping 8-slice 3D window construction with slice mapping |
+| **3D Backbone** | [`unet3d.py`](src/models/unet3d.py) | 3D Attention U-Net, GroupNorm, anisotropic depth handling, ASPP-style context |
+| **Graph Construction** | [`graph_builder.py`](src/models/graph_builder.py) | Feature-space KNN graph construction with symmetric adjacency |
+| **Graph Message Passing** | [`graph_conv.py`](src/models/graph_conv.py) | Residual graph aggregation and node-feature updates |
+| **Graph Structural Filtering** | [`gsf.py`](src/models/gsf.py) | Graph Laplacian, GFT, Frequency SE, inverse transform, residual fusion |
+| **Evaluation** | [`metrics.py`](src/evaluation/metrics.py) | Dice, Precision, Recall, and IoU |
+| **Prediction Aggregation** | [`prediction_aggregation.py`](src/evaluation/prediction_aggregation.py) | Mapping overlapping 3D predictions back to final sequence-level probabilities |
+
+> **Code Scope:** The public code is intentionally simplified and sanitized. It is designed to demonstrate the core engineering components of the project, not to reproduce the complete unpublished research system.
+
+---
+
 ## Repository Structure
 
 ```text
 .
 ├── README.md
+├── requirements.txt
+├── src/
+│   ├── preprocessing/
+│   │   ├── polar_transform.py
+│   │   └── volume_builder.py
+│   ├── models/
+│   │   ├── unet3d.py
+│   │   ├── graph_builder.py
+│   │   ├── graph_conv.py
+│   │   └── gsf.py
+│   └── evaluation/
+│       ├── metrics.py
+│       └── prediction_aggregation.py
 └── docs/
     ├── 01_problem.md
     ├── 02_data.md
@@ -263,11 +295,12 @@ See the deep dive for experiment design, paired comparisons, and failure analysi
         └── 04d_comparison_models.md
 ```
 
-**How to navigate:** start with the README for the end-to-end engineering story, then use the deep dives for implementation decisions, model architecture, and validation evidence.
+**How to navigate:** start with the README for the end-to-end engineering story, open `src/` for representative implementation samples, and use `docs/` for technical design decisions and validation evidence.
 
 ---
 
 ## Project Context & Repository Scope
 
 - **Context:** Master's research in biomedical engineering at National Taiwan University, focused on 3D deep learning and graph-based modeling for coronary OCT segmentation.
-- **Public scope:** This portfolio contains sanitized technical descriptions, architecture designs, aggregated results, and publication-safe examples. Raw clinical data, identifiable patient information, physician annotation files, restricted code, and other non-public research materials are not included.
+- **Public scope:** This portfolio contains sanitized technical descriptions, architecture designs, aggregated results, publication-safe examples, and selected code samples.
+- **Excluded materials:** Raw clinical data, identifiable patient information, physician annotation files, model weights, complete experiment infrastructure, and restricted or unpublished research code are not included.
