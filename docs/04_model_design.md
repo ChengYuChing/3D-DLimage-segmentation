@@ -2,7 +2,7 @@
 
 [← Back to README](../README.md#p4--model-design)
 
-This project uses a **shared 3D segmentation backbone** and a controlled set of graph, spectral, and comparison modules to study how long-range context should be represented and propagated.
+This project uses a **shared 3D segmentation backbone** and a controlled set of graph, Graph Structural Filtering, and comparison modules to study how long-range context should be represented and propagated.
 
 ## Model Design Strategy
 
@@ -11,7 +11,7 @@ flowchart LR
     A["3D Attention U-Net<br/>Shared Image Backbone"]
     B["GCN U-Net<br/>Graph Baseline"]
     C["GSF_GAP U-Net<br/>Main Method"]
-    D["GSF_RMSP<br/>Spectral Variant"]
+    D["GSF_RMSP<br/>Frequency Descriptor Variant"]
     E["Gated GSF_GAP<br/>Gating Variant"]
     F["CWA U-Net<br/>Feature-weighting Baseline"]
     G["Non-local U-Net<br/>Global-attention Baseline"]
@@ -25,9 +25,9 @@ flowchart LR
 
 The design progression is:
 
-> **3D feature extraction → explicit graph relations → frequency-aware graph filtering**
+> **3D feature extraction → explicit graph relations → Graph Structural Filtering**
 
-The backbone is kept fixed across downstream models so architectural comparisons focus on the added relational and spectral components.
+The backbone is kept fixed across downstream models so architectural comparisons focus on the added relational and structural-filtering components.
 
 ---
 
@@ -68,7 +68,7 @@ This shared backbone provides a controlled starting point before graph-specific 
 |---|---|---|
 | **3D Backbone** | Backbone selection, multi-scale feature extraction, cross-slice context | [04a — Shared Backbone](models/04a_shared_backbone.md) |
 | **Graph Representation** | Feature-to-node projection, 128-node KNN graph, residual GraphConv | [04b — Graph Representation](models/04b_graph_representation.md) |
-| **Graph Structural Filtering** | GFT, Frequency SE, spectral reweighting, GAP/RMSP/gating variants | [04c — Graph Structural Filtering](models/04c_graph_structural_filtering.md) |
+| **Graph Structural Filtering** | GFT, Frequency SE, graph-frequency reweighting, GAP/RMSP/gating variants | [04c — Graph Structural Filtering](models/04c_graph_structural_filtering.md) |
 | **Comparison Models** | CWA feature reweighting and Non-local global attention | [04d — Comparison Models](models/04d_comparison_models.md) |
 
 ---
