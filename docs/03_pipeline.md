@@ -1,347 +1,317 @@
 # 03. Preprocessing Pipeline
 
-## 1. What This Stage Solves
-
-The structured OCT dataset from P2 was still not directly suitable for 3D segmentation.
-
-Raw OCT images contain domain-specific issues that can interfere with learning:
-
-- noise inside the vessel lumen,
-- circular vessel geometry represented in Cartesian coordinates,
-- guidewire shadows,
-- weak signals in deeper tissue,
-- limited information in a single 2D frame.
-
-I therefore designed the preprocessing pipeline around four objectives:
-
-> **Clean → Normalize → Refine → Build 3D Context**
-
-The final output is a **256 × 256 × 8 × 1 model-ready 3D Volume of Interest (VoI)**.
+> **Goal:** Transform ordered 2D OCT sequences into clean, standardized, and context-aware 3D inputs for segmentation.
 
 ---
 
-## 2. Pipeline at a Glance
+## 1. Pipeline at a Glance
+
+Raw OCT frames are not directly suitable for 3D segmentation because they contain imaging noise, circular vessel geometry, guidewire artifacts, weak deep-tissue signals, and limited context in a single frame.
+
+I designed the pipeline around four stages:
+
+> **1. Clean → 2. Normalize → 3. Refine → 4. Build 3D Context**
 
 ```mermaid
 flowchart LR
     A["Ordered OCT Sequences"]
 
-    subgraph S1["1. Clean"]
-        B["Lumen Segmentation"]
-        C["Noise Removal + Grayscale"]
+    subgraph S1["1. CLEAN"]
+        B["Remove Lumen Noise"]
     end
 
-    subgraph S2["2. Normalize"]
-        D["Cartesian → Polar"]
-        E["Resize to 256×256"]
-        F["Center-shift Augmentation"]
+    subgraph S2["2. NORMALIZE"]
+        C["Cartesian → Polar"]
+        D["Resize 256×256"]
+        E["Center-shift Augmentation"]
     end
 
-    subgraph S3["3. Refine"]
-        G["Guidewire Shadow Removal"]
-        H["Depth-aware Enhancement"]
+    subgraph S3["3. REFINE"]
+        F["Remove Guidewire Shadow"]
+        G["Enhance Deep Signals"]
     end
 
-    subgraph S4["4. Build 3D Context"]
-        I["8-slice Sliding Window"]
-        J["Stride = 3"]
+    subgraph S4["4. BUILD 3D CONTEXT"]
+        H["8-slice Window"]
+        I["Stride = 3"]
     end
 
-    K["256×256×8×1 VoI"]
+    J["256×256×8×1 VoI"]
 
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> G
-    D -. "training augmentation" .-> F
-    F --> G
-    G --> H
-    H --> I
-    I --> J
-    J --> K
+    A --> B --> C --> D --> F --> G --> H --> I --> J
+    C -. "training augmentation" .-> E
+    E --> F
 ```
-
-Each stage addresses a different limitation of the raw OCT data.
 
 ---
 
 # Stage 1 — Clean
 
-## 3. Lumen Noise Removal
+## 2. Remove Lumen-region Noise
 
-### Problem
+### Why
 
-Because of the OCT acquisition process, the vessel lumen may contain structures that are not useful for calcification segmentation, including:
+The lumen may contain:
 
-- guidewire-related reflections,
-- residual blood,
-- other lumen-region noise.
+- guidewire-related reflections
+- residual blood
+- other signals unrelated to vessel-wall calcification
 
-These signals can become distracting features during model training.
+These regions can introduce distracting features during training.
 
-### Approach
+### What I Did
 
-A **U-Net-based lumen segmentation model** was used to identify the lumen region.
-
-The segmented lumen area was then removed from the OCT image so later models could focus more strongly on vessel-wall structures.
-
-The original RGB image was also converted to grayscale:
-
-[
-Y = 0.299R + 0.587G + 0.114B
-]
-
-This reduces the input to a single intensity channel and lowers unnecessary computational complexity.
+- Used a **U-Net-based lumen segmentation model** to identify the lumen region
+- Removed pixels inside the detected lumen
+- Converted the image to **single-channel grayscale**
 
 ### Output
 
-**Cleaned grayscale OCT frame**
+> **Clean grayscale OCT frame focused on the vessel wall**
 
 ---
 
 # Stage 2 — Normalize
 
-## 4. Cartesian-to-Polar Transformation
+## 3. Convert Cartesian OCT to Polar Representation
 
-### Problem
+### Why
 
-OCT images are originally represented in Cartesian coordinates, while the anatomy itself is organized radially around the imaging catheter.
+In the original image, the vessel wall forms a circular structure around the catheter.
 
-This means the vessel wall appears as a circular structure, which is less naturally aligned with standard convolutional operations.
+This geometry makes tissue depth and vessel-wall position less directly aligned with the image axes.
 
-### Approach
+### What I Did
 
-The image is resampled into **polar coordinates** using the catheter center as the transformation origin.
+- Used the catheter center as the origin of the transformation
+- Unwrapped the circular vessel wall into a rectangular **polar representation**
+- Resampled the result to **256 × 256**
 
-Conceptually:
+### How to Read the Polar Image
 
-[
-x = rcos(	heta), qquad y = rsin(	heta)
-]
+| Axis | Meaning |
+|---|---|
+| Horizontal | Position around the vessel |
+| Vertical | Tissue depth from lumen toward vessel wall |
 
-The transformation:
-
-- samples the vessel radially from the lumen toward deeper tissue,
-- unwraps the circular vessel wall into a rectangular representation,
-- keeps tissue depth aligned along a consistent image direction.
-
-The transformed image is then resized using bilinear interpolation to:
-
-> **256 × 256**
-
-### Why Polar Representation Helps
-
-After transformation:
-
-- one axis represents the angular position around the vessel,
-- the other represents tissue depth.
-
-This creates a representation that is better aligned with the anatomical structure being segmented.
+The transformation makes vessel-wall structure more consistent across images and easier to process downstream.
 
 ---
 
-## 5. OCT-specific Center-shift Augmentation
+## 4. OCT-specific Center-shift Augmentation
 
-### Problem
+### Why
 
-A model trained on only one polar transformation center may become overly dependent on a fixed geometric representation.
+Using exactly the same catheter center for every transformation may make the model too dependent on one geometric representation.
 
-### Approach
+### What I Did
 
-Instead of applying generic image rotations or translations after preprocessing, augmentation is introduced directly into the OCT coordinate transformation.
-
-Four additional centers are created around the original catheter center:
+Generated additional polar images using four shifted transformation centers:
 
 ```text
+Original: (x, y)
+
+Shifted:
 (x + 10, y)
 (x - 10, y)
 (x, y + 10)
 (x, y - 10)
 ```
 
-Each center generates a different polar representation of the same OCT frame.
+### Why This Is Different from Generic Augmentation
 
-### Why This Design
+Instead of simply rotating or translating the processed image, the augmentation changes the **polar transformation itself**.
 
-The augmentation changes the spatial representation while preserving the underlying vessel anatomy.
-
-This provides additional variation that is specific to OCT imaging geometry rather than relying only on generic computer-vision augmentation.
+This creates realistic geometric variation while preserving the underlying vessel structure.
 
 ---
 
 # Stage 3 — Refine
 
-## 6. Guidewire Shadow Removal
+## 5. Remove Guidewire Shadow
 
-### Problem
+### Why
 
-The guidewire can produce a radial low-intensity shadow that hides part of the vessel wall.
+The guidewire produces a low-intensity shadow that can hide vessel-wall information and resemble weak tissue signals.
 
-Because the shadow can resemble low-signal tissue, it may introduce misleading features during segmentation.
+### Key Insight
 
-### Approach
+The guidewire shadow is not random.
 
-Guidewire shadows are easier to detect after polar transformation.
+Across consecutive OCT frames it forms a **continuous low-intensity trajectory**.
 
-For each polar OCT frame:
+### What I Did
 
-1. pixel intensities are aggregated along the relevant image direction;
-2. these intensity profiles are stacked across consecutive frames;
-3. the guidewire shadow appears as a **continuous low-intensity trajectory**;
-4. **dynamic programming** is used to identify its boundaries;
-5. the detected shadow region is removed from the OCT image.
+```text
+Polar OCT Frames
+      ↓
+Aggregate Pixel Intensities
+      ↓
+Stack Consecutive Frames
+      ↓
+Detect Continuous Dark Trajectory
+      ↓
+Dynamic Programming
+      ↓
+Remove Guidewire-shadow Region
+```
 
-### Why Use Consecutive Frames?
-
-The guidewire position changes gradually between neighboring frames.
-
-Using multiple frames therefore provides a stronger signal than detecting the shadow independently in every image.
-
-This is an early example of using **longitudinal information** even before the 3D segmentation model.
-
----
-
-## 7. Depth-aware Signal Enhancement
-
-### Problem
-
-OCT uses reflected light to visualize tissue.
-
-As imaging depth increases, the signal becomes weaker, making deeper calcification more difficult to distinguish.
-
-A standard global contrast adjustment would strengthen both shallow and deep regions equally and could distort already-visible structures.
-
-### Approach
-
-I applied a **depth-dependent enhancement function** so the amount of enhancement changes according to the pixel's depth in the polar image.
-
-The objective is to:
-
-- preserve useful contrast in shallow tissue,
-- strengthen weak features in deeper tissue,
-- make subtle lesion boundaries more visible to the segmentation model.
+Instead of detecting the shadow independently in every frame, the method uses its continuity across the pullback.
 
 ### Output
 
-**Enhanced 256 × 256 polar OCT frame**
+> **OCT sequence with guidewire-shadow interference removed**
+
+---
+
+## 6. Enhance Weak Deep-tissue Signals
+
+### Why
+
+OCT signal intensity decreases with imaging depth.
+
+As a result:
+
+> shallow tissue → stronger signal  
+> deep tissue → weaker signal
+
+A uniform brightness adjustment would enhance both regions equally and could reduce useful contrast.
+
+### What I Did
+
+Applied **depth-aware enhancement**, where deeper regions receive stronger enhancement than shallow regions.
+
+```text
+Shallow Tissue
+Lower Enhancement
+      ↓
+      ↓ increasing depth
+      ↓
+Higher Enhancement
+Deep Tissue
+```
+
+### Design Goal
+
+- preserve existing shallow-tissue contrast
+- strengthen weak deep-tissue structures
+- make subtle calcification boundaries easier to learn
 
 ---
 
 # Stage 4 — Build 3D Context
 
-## 8. Volume of Interest Construction
+## 7. Construct 3D Volumes of Interest
 
-### Problem
+### Why
 
-A single OCT image captures only one cross-section of the vessel.
+A single OCT frame only shows one vessel cross-section.
 
-Calcified plaques, however, extend across multiple neighboring frames.
+Calcified lesions often continue across neighboring frames, so isolated 2D processing loses useful longitudinal information.
 
-Using one frame at a time therefore loses information about lesion continuity along the vessel.
+### What I Did
 
-### Approach
+Used a sliding window to group consecutive frames into **3D Volumes of Interest (VoIs)**.
 
-A sliding window is applied along each ordered pullback to construct **3D Volumes of Interest (VoIs)**.
-
-| Parameter | Value |
+| Parameter | Setting |
 |---|---:|
-| Spatial size | **256 × 256** |
+| Image size | **256 × 256** |
 | Window depth | **8 slices** |
 | Stride | **3 slices** |
-| Channels | **1** |
-| Final input shape | **256 × 256 × 8 × 1** |
+| Channel | **1** |
+| Model input | **256 × 256 × 8 × 1** |
 
-For a pullback containing ordered frames (I_1, I_2, ..., I_T), the (q)-th VoI contains eight consecutive frames:
-
-[
-V_q = {I_{1+3(q-1)}, I_{2+3(q-1)}, ..., I_{8+3(q-1)}}
-]
-
-Each new VoI moves forward by three frames.
-
----
-
-## 9. Why Use Overlapping VoIs?
-
-Because the window depth is 8 and the stride is 3, neighboring VoIs overlap.
-
-For example:
+### Sliding-window Design
 
 ```text
+Frames:  1  2  3  4  5  6  7  8  9 10 11 12 13 14
+
 VoI 1:  [1  2  3  4  5  6  7  8]
+
 VoI 2:           [4  5  6  7  8  9 10 11]
+
 VoI 3:                    [7  8  9 10 11 12 13 14]
 ```
 
-This design provides two advantages.
-
-### A. Multiple Longitudinal Contexts
-
-The same OCT slice can appear in different positions across several VoIs.
-
-The model can therefore observe the same lesion with different preceding and following frames.
-
-### B. Reduced Window-boundary Effects
-
-A lesion that appears near the edge of one VoI may appear closer to the center of another.
-
-This reduces the risk of losing useful contextual information simply because of sliding-window placement.
+Because **window depth = 8** and **stride = 3**, neighboring VoIs overlap.
 
 ---
 
-## 10. Output Data Contract
+## 8. Why Overlap Matters
 
-The preprocessing pipeline transforms:
+The overlapping design provides two benefits.
 
-> **Ordered 704 × 704 clinical OCT frames**
+### A. More Longitudinal Context
 
-into:
+The same OCT slice can appear with different neighboring frames.
 
-> **256 × 256 × 8 × 1 model-ready 3D VoIs**
+This gives the model multiple views of the same lesion context.
 
-The final model input contains:
+### B. Lower Boundary Sensitivity
 
-| Dimension | Meaning |
-|---|---|
-| **256** | image height |
-| **256** | image width |
-| **8** | consecutive OCT slices |
-| **1** | grayscale channel |
+A lesion near the edge of one VoI may appear near the center of another.
 
-These VoIs become the shared input format used across the model architectures in P4.
+This reduces dependence on where the sliding window happens to start.
 
 ---
 
-## 11. Pipeline Design Summary
+## 9. End-to-End Transformation
 
-| Stage | Problem Addressed | Output |
-|---|---|---|
-| **Clean** | Lumen-region noise | Clean grayscale OCT |
-| **Normalize** | Circular OCT geometry | 256×256 polar representation |
-| **Refine** | Guidewire artifacts + weak deep signals | Cleaner and stronger tissue features |
-| **Build 3D Context** | Limited single-frame information | 256×256×8×1 VoIs |
+The complete preprocessing workflow transforms:
 
-### Key Takeaway
+```text
+Raw 704×704 OCT Frames
+        ↓
+Lumen Cleanup
+        ↓
+Polar Representation
+        ↓
+Guidewire-shadow Removal
+        ↓
+Depth-aware Enhancement
+        ↓
+3D Sliding Window
+        ↓
+256×256×8×1 VoIs
+```
 
-The preprocessing pipeline is not a collection of independent image-processing steps.
+### Pipeline Summary
 
-Each stage directly addresses one of the failure modes identified in P1 and progressively transforms the data into a representation designed for **3D coronary OCT segmentation**.
+| Stage | Input Problem | Engineering Response | Output |
+|---|---|---|---|
+| **Clean** | Lumen noise | Remove irrelevant lumen signals | Clean grayscale frame |
+| **Normalize** | Circular OCT geometry | Polar transformation | 256×256 polar image |
+| **Refine** | Artifact + weak signals | Shadow removal + depth enhancement | Cleaner vessel-wall features |
+| **Build 3D Context** | Limited 2D information | 8-slice overlapping VoIs | 256×256×8×1 input |
 
 ---
 
-## 12. Handoff to Later Stages
+## 10. Output
 
-P3 ends at **VoI construction**.
+### P3 Output
 
-The later inference workflow performs a separate operation:
+> **Standardized 256 × 256 × 8 × 1 3D VoIs**
 
-> overlapping VoI predictions  
-> → map predictions back to original frame positions  
-> → average overlapping probabilities  
-> → apply a 0.5 threshold  
-> → reconstruct the full-vessel 3D prediction mask
+These inputs are shared across the model architectures evaluated in P4.
 
-That process belongs to **P5 — Evaluation & Results**, because it determines how VoI-level predictions are converted into vessel-level outputs and metrics.
+### Pipeline Boundary
+
+P3 ends at **model input construction**.
+
+Full-vessel reconstruction happens later:
+
+```text
+VoI Predictions
+      ↓
+Map Back to Original Frames
+      ↓
+Average Overlapping Probabilities
+      ↓
+Threshold = 0.5
+      ↓
+Full-vessel 3D Prediction
+```
+
+That belongs to **P5 — Evaluation & Results**.
 
 [Next: Model Design →](04_model_design.md)
