@@ -67,17 +67,20 @@ flowchart TB
 
 ### P1 — Problem Definition
 
-> **Key question:** What must the ML system handle to segment calcification reliably?
+> **Key Question —** What must the ML system handle to segment calcification reliably?
 
-**Highlights**
-- Formulated the task as **3D segmentation** so predictions can use neighboring slices rather than isolated frames.
-- Translated imaging failure modes into three engineering requirements: **robustness, wider spatial context, and boundary quality**.
+#### 1. Highlights
+- **3D problem formulation** — used neighboring slices instead of isolated frames.
+- **Engineering requirements** — defined **robustness, wider spatial context, and boundary quality** from imaging failure modes.
 
-**Impact:** established the technical requirements that guided preprocessing, 3D input design, graph modeling, and evaluation.
+#### 2. Impact
+- Established the technical direction for **preprocessing → 3D input design → graph modeling → evaluation**.
 
-**Key takeaway:** problem framing came before architecture selection, so each downstream design choice addressed a defined failure mode.
+#### 3. Key Takeaway
+> Problem framing came before architecture selection, so every downstream design choice addressed a defined failure mode.
 
-**Next:** build a reliable dataset that preserves image–label alignment and frame order → **P2**.
+#### 4. Next
+**P2 → Data Preparation:** Build a reliable dataset that preserves image–label alignment and frame order.
 
 [Deep Dive →](docs/01_problem.md)
 
@@ -85,17 +88,20 @@ flowchart TB
 
 ### P2 — Data Preparation
 
-> **Key question:** How do we turn disconnected images, metadata, and labels into a reliable dataset for 3D modeling?
+> **Key Question —** How do we turn disconnected images, metadata, and labels into a reliable dataset for 3D modeling?
 
-**Highlights**
-- Structured **34,954 frames from 138 patients and 192 pullbacks**.
-- Converted reference annotations into pixel-level masks while preserving **frame order, pullback identity, and image–mask alignment**.
+#### 1. Highlights
+- **Dataset structuring** — organized **34,954 frames from 138 patients and 192 pullbacks**.
+- **Label & sequence alignment** — converted reference annotations into pixel-level masks while preserving **frame order, pullback identity, and image–mask alignment**.
 
-**Impact:** created an ordered, model-ready dataset and a stable **data contract** for every downstream preprocessing and modeling experiment.
+#### 2. Impact
+- Created an ordered, model-ready dataset and a stable **data contract** for every downstream preprocessing and modeling experiment.
 
-**Key takeaway:** separating data organization from image transformation reduced downstream ambiguity and kept the 3D pipeline reproducible.
+#### 3. Key Takeaway
+> Separating data organization from image transformation reduced downstream ambiguity and kept the 3D pipeline reproducible.
 
-**Next:** transform ordered 2D sequences into standardized 3D model inputs → **P3**.
+#### 4. Next
+**P3 → Preprocessing Pipeline:** Transform ordered 2D sequences into standardized 3D model inputs.
 
 [Deep Dive →](docs/02_data.md)
 
@@ -103,7 +109,9 @@ flowchart TB
 
 ### P3 — Preprocessing Pipeline
 
-> **Key question:** How do we convert ordered 2D sequences into robust, context-aware 3D inputs?
+> **Key Question —** How do we convert ordered 2D sequences into robust, context-aware 3D inputs?
+
+#### 1. Highlights
 
 | Stage | Engineering Action | Purpose |
 |---|---|---|
@@ -112,15 +120,17 @@ flowchart TB
 | **Refine** | Guidewire-shadow handling · depth-aware enhancement | Improve difficult tissue features |
 | **Build 3D Context** | 8-slice sliding window · stride 3 | Preserve longitudinal context |
 
-**Highlights**
-- Combined OCT-specific cleaning, geometry normalization, artifact handling, signal enhancement, and 3D volume construction in one pipeline.
-- Standardized every model input to **256×256×8×1**, with overlapping 8-slice VoIs using stride 3.
+- **Standardized input** — all model variants use **256×256×8×1** 3D VoIs.
+- **Controlled preprocessing** — OCT-specific cleaning, geometry normalization, artifact handling, signal enhancement, and 3D construction are handled before model comparison.
 
-**Impact:** produced one consistent 3D input interface across all model variants, allowing P4 comparisons to focus on architecture rather than inconsistent preprocessing.
+#### 2. Impact
+- Produced one consistent 3D input interface across all model variants, allowing P4 comparisons to focus on architecture rather than inconsistent preprocessing.
 
-**Key takeaway:** preprocessing converted domain-specific image problems into a standardized ML input problem.
+#### 3. Key Takeaway
+> Preprocessing converted domain-specific image problems into a standardized ML input problem.
 
-**Next:** compare local CNN, graph-based, and global-context modeling strategies → **P4**.
+#### 4. Next
+**P4 → Model Design:** Compare local CNN, graph-based, and global-context modeling strategies.
 
 [Deep Dive →](docs/03_pipeline.md)
 
@@ -128,9 +138,11 @@ flowchart TB
 
 ### P4 — Model Design
 
-> **Key question:** Does explicit graph modeling — and then Graph Structural Filtering — add value beyond the shared 3D CNN backbone?
+> **Key Question —** Does explicit graph modeling — and then Graph Structural Filtering — add value beyond the shared 3D CNN backbone?
 
-#### Architecture Evolution
+#### 1. Highlights
+
+##### Architecture Evolution
 
 ```mermaid
 flowchart LR
@@ -157,16 +169,17 @@ flowchart LR
 | **Message Passing** | 2× GraphConv + residuals | Aggregate graph context |
 | **Structural Filtering** | GFT + Frequency SE | Reweight graph-frequency information before propagation |
 
-**Highlights**
-- Built a controlled model family around one shared 3D backbone: **U-Net → GCN U-Net → GSF_GAP U-Net**.
-- Added a compact **128-node KNN graph** and developed **Graph Structural Filtering** with GFT + Frequency SE before GraphConv.
-- Included CWA, Non-local, RMSP, and soft-gating variants to test alternative representation and filtering strategies.
+- **Controlled model family** — **U-Net → GCN U-Net → GSF_GAP U-Net**.
+- **Alternative strategies** — CWA, Non-local, RMSP, and soft-gating variants test different representation and filtering choices.
 
-**Impact:** **GSF_GAP** achieved the highest mean 3D Dice of **0.834**, compared with **0.823 for GCN U-Net** and **0.818 for U-Net**.
+#### 2. Impact
+- **GSF_GAP** achieved the highest mean 3D Dice of **0.834**, compared with **0.823 for GCN U-Net** and **0.818 for U-Net**.
 
-**Key takeaway:** the strongest architecture-stage gain appeared after refining graph features before message passing, not from graph construction alone.
+#### 3. Key Takeaway
+> The strongest architecture-stage gain appeared after refining graph features before message passing, not from graph construction alone.
 
-**Next:** test whether those architecture changes hold under repeated vessel-level evaluation → **P5**.
+#### 4. Next
+**P5 → Model Validation & Results:** Test whether the architecture gains hold under repeated vessel-level evaluation.
 
 [Model Design Deep Dive →](docs/04_model_design.md)
 
@@ -174,9 +187,11 @@ flowchart LR
 
 ### P5 — Model Validation & Results
 
-> **Key question:** Do the architecture changes produce repeatable gains under the same data and evaluation setup?
+> **Key Question —** Do the architecture changes produce repeatable gains under the same data and evaluation setup?
 
-#### Validation Framework
+#### 1. Highlights
+
+##### Validation Framework
 
 | Design | Implementation | Why It Matters |
 |---|---|---|
@@ -185,7 +200,7 @@ flowchart LR
 | **Vessel-level evaluation** | Aggregate overlapping VoI predictions before scoring | Evaluate the final output |
 | **Multi-metric analysis** | Dice · Precision · Recall · IoU | Capture overlap and error trade-offs |
 
-#### Architecture Evidence
+##### Architecture Evidence
 
 | Architecture Step | Mean 3D Dice | Change |
 |---|---:|---:|
@@ -193,16 +208,17 @@ flowchart LR
 | **+ Graph Modeling** | 0.823 | +0.005 |
 | **+ Graph Structural Filtering** | **0.834** | **+0.011 vs. GCN** |
 
-**Highlights**
-- Evaluated all models across **3 disjoint test sets and 134 vessels** using the same data and training setup.
-- Aggregated overlapping VoI predictions before vessel-level scoring and compared **Dice, Precision, Recall, and IoU**.
-- Used paired case-level analysis and failure analysis to interpret gains beyond one leaderboard metric.
+- **Repeated evaluation** — all models were tested across **3 disjoint test sets and 134 vessels** under the same setup.
+- **Behavior analysis** — compared Dice, Precision, Recall, IoU, paired case-level differences, and representative failure modes.
 
-**Impact:** **GSF_GAP** achieved the best mean Dice (**0.834**) and tied the highest IoU (**0.703**), improving mean Dice by **0.016 over U-Net** and **0.011 over GCN U-Net**.
+#### 2. Impact
+- **GSF_GAP** achieved the best mean Dice (**0.834**) and tied the highest IoU (**0.703**), improving mean Dice by **0.016 over U-Net** and **0.011 over GCN U-Net**.
 
-**Key takeaway:** GSF produced the strongest architecture-stage gain, but model selection also depended on **Precision–Recall behavior, cross-split consistency, and statistical limits**.
+#### 3. Key Takeaway
+> GSF produced the strongest architecture-stage gain, but model selection also depended on **Precision–Recall behavior, cross-split consistency, and statistical limits**.
 
-**Next:** see the deep dive for experiment design, paired comparisons, and failure analysis.
+#### 4. Next
+See the deep dive for experiment design, paired comparisons, and failure analysis.
 
 [Model Validation & Results Deep Dive →](docs/05_experiments_results.md)
 
