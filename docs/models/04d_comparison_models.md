@@ -13,11 +13,11 @@ They represent two alternative ways to improve context modeling without using th
 | **CWA U-Net** | Image feature maps | Feature grouping and reweighting | No |
 | **Non-local U-Net** | Dense bottleneck feature map | All-to-all global attention | No |
 | **GCN U-Net** | 128-node graph | KNN message passing | Yes |
-| **GSF U-Net** | Graph + frequency | Structural filtering + message passing | Yes |
+| **GSF U-Net** | Graph + frequency | Graph Structural Filtering + message passing | Yes |
 
-This comparison separates four different strategies:
+The evaluation covers four parallel modeling strategies:
 
-> **image-space reweighting → dense global attention → graph message passing → graph structural filtering**
+> **Image-space reweighting · Dense global attention · Graph message passing · Graph Structural Filtering**
 
 ---
 
