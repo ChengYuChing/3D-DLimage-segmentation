@@ -233,146 +233,111 @@ Each model has a clear role:
 
 ---
 
-### 1. Shared 3D Image Backbone
+### 1. Backbone Configuration Selection
 
-All core models start from the same **3D Attention U-Net backbone**, allowing differences between models to be attributed mainly to graph and graph-frequency modeling rather than changes in the encoder-decoder architecture.
+Before adding graph modules, I first fixed a common backbone configuration to keep downstream comparisons controlled.
 
-**Selected backbone design**
+| Component | Previous | Selected |
+|---|---:|---:|
+| **Input depth** | 5 slices | **8 slices** |
+| **Base channels** | 8 | **32** |
+| **Normalization** | BatchNorm | **GroupNorm** |
 
-- **Input:** `256 × 256 × 8 × 1`
-- **Base filters:** `32`
-- **Normalization:** Group Normalization
-- **ASPP:** dilation rates `3 / 6 / 9` for multi-scale in-plane context
-- **Depth-dilated convolution:** expands context along the slice direction
-- **Attention-gated skip connections:** reduce irrelevant encoder features entering the decoder
-- **Spatial pooling:** `(2, 2, 1)` to preserve the 8-slice depth dimension
-
-The backbone therefore provides both **local image features and cross-slice context** before any graph reasoning is introduced.
+The selected configuration was then **held fixed across all downstream models**, isolating the impact of graph and spectral modules.
 
 ---
 
-### 2. From Image Features to Graph Representation
+### 2. Shared 3D Backbone
 
-The next design step asks:
+All downstream models use the same **3D Attention U-Net feature extractor**.
 
-> **Can distant but structurally related image regions interact more directly?**
+- Input: `256 × 256 × 8 × 1`
+- Base channels: `32`
+- Group Normalization
+- ASPP with dilation rates `3 / 6 / 9`
+- Depth-dilated 3D convolution
+- Attention-gated skip connections
 
-Instead of performing graph operations on every voxel, multi-scale image features are compressed into a compact graph representation:
+> **Role:** provide a fixed 3D feature backbone for controlled architecture comparisons.
+
+---
+
+### 3. Graph Representation & Message Passing
+
+To model long-range dependencies beyond local convolution, multi-scale CNN features are projected into a compact graph representation.
 
 ```text
-Multi-scale CNN Features
+Multi-scale Features
         ↓
-Graph Pooling (64×64×1)
+Graph Pooling
         ↓
-4×4×8
-        ↓
-128 Graph Nodes
+4×4×8 = 128 Nodes
         ↓
 KNN Graph (k = 4)
         ↓
-2× GraphConv + Residual Connections
+2× GraphConv
         ↓
 Shared Decoder
 ```
 
-This reduces graph-computation cost while preserving the full 8-slice depth structure. The GCN baseline then performs message passing between feature-similar regions, including regions that may be spatially far apart in the original image.
+Graph pooling reduces computation while preserving the full 8-slice depth structure.
+
+> **Role:** explicitly model long-range feature interactions through graph message passing.
 
 ---
 
-### 3. Graph Structural Filtering — Main Contribution
+### 4. Graph Structural Filtering
 
-Adding graph connections introduces a second problem:
+KNN graphs can connect feature-similar regions that are not equally useful for segmentation.
 
-> **Feature similarity does not always mean structural relevance.**
+GSF adds **spectral feature reweighting before GraphConv**:
 
-KNN can connect regions with similar learned features even when they represent different lesion structures, boundaries, normal tissue, or imaging disturbances.
-
-The core GSF idea is therefore:
-
-> **Do not treat all graph information equally before message passing.**
-
-GSF_GAP keeps the same 128-node KNN graph used by GCN U-Net, but introduces a spectral processing branch before GraphConv:
-
-```mermaid
-flowchart LR
-    A["128 Node Features"] --> B["KNN Graph"]
-    B --> C["Normalized Graph Laplacian"]
-    C --> D["Graph Fourier Transform"]
-    D --> E["Graph-frequency Components"]
-    E --> F["Frequency SE"]
-    F --> G["Adaptive Reweighting"]
-    G --> H["Residual Fusion"]
-    H --> I["2× GraphConv"]
-    I --> J["Shared Decoder"]
-
-    A -. "Original features" .-> H
+```text
+Node Features
+     ↓
+Graph Fourier Transform
+     ↓
+Frequency Reweighting
+     ↓
+Residual Fusion
+     ↓
+GraphConv
 ```
 
-The model:
+The main model, **GSF_GAP U-Net**, uses Frequency Squeeze-and-Excitation to learn the contribution of graph-frequency components before message passing.
 
-1. decomposes node features into graph-frequency components,
-2. estimates the importance of each frequency using **Frequency Squeeze-and-Excitation**,
-3. adaptively reweights those components,
-4. fuses the filtered representation with the original node features,
-5. performs graph message passing.
-
-Importantly, GSF **does not directly delete or rebuild individual KNN edges**. It changes the contribution of different graph-frequency components before message passing.
+> **Role:** refine graph features before propagation instead of treating all graph signals equally.
 
 ---
 
-### 4. GSF Design Variants
+### 5. GSF Ablation Variants
 
-Two variants were built to test specific decisions inside the GSF module rather than introduce unrelated architectures.
-
-| Variant | Design Question | Change |
-|---|---|---|
-| **GSF_GAP** | Can the mean signed response represent frequency importance? | Global Average Pooling |
-| **GSF_RMSP** | Does frequency energy provide a better descriptor when positive and negative responses cancel? | Root Mean Square Pooling |
-| **Gated GSF_GAP** | Can weak frequency components be further suppressed selectively? | Learnable soft threshold + differentiable gate |
-
-The gated variant applies a learnable soft-filtering mechanism after Frequency SE, while keeping the remaining GFT, residual fusion, GraphConv, and decoder design unchanged.
-
----
-
-### 5. Alternative Modeling Strategies
-
-CWA and Non-local U-Net are not part of the GSF evolution path.
-
-They answer a different question:
-
-> **How does graph-frequency modeling compare with other ways of improving feature or global-context modeling?**
-
-| Model | Representation | Main Strategy | Explicit Graph |
-|---|---|---|---:|
-| **U-Net** | Image grid | 3D convolution | No |
-| **CWA U-Net** | Image grid | Feature clustering & reweighting | No |
-| **Non-local U-Net** | Image grid | Dense global attention | No |
-| **GCN U-Net** | Graph | Structured message passing | Yes |
-| **GSF U-Net** | Graph + frequency | Frequency-aware graph feature filtering + message passing | Yes |
-
----
-
-### What Each Model Is Designed to Test
-
-| Model | Technical Question |
+| Model | Design Change |
 |---|---|
-| **U-Net** | How strong is the shared 3D image backbone alone? |
-| **GCN U-Net** | Does explicit graph-based long-range message passing add value? |
-| **GSF_GAP U-Net** | Does adaptive graph-frequency reweighting improve graph representation before propagation? |
-| **GSF_RMSP U-Net** | Does energy-based frequency description improve the GSF mechanism? |
-| **Gated GSF_GAP U-Net** | Does additional soft frequency filtering improve selective information propagation? |
-| **CWA U-Net** | How does image-feature reweighting compare with graph-based modeling? |
-| **Non-local U-Net** | How does dense global attention compare with structured graph relationships? |
+| **GSF_GAP** | Global Average Pooling for frequency descriptors |
+| **GSF_RMSP** | RMS pooling to capture frequency magnitude |
+| **Gated GSF_GAP** | Learnable soft gate for additional frequency suppression |
 
-### Design Takeaway
+These ablations isolate the effect of **frequency descriptor design** and **soft gating** while keeping the rest of the graph pipeline fixed.
 
-The model family was built to isolate increasingly specific questions:
+---
 
-> **Can 3D CNNs capture the lesion?**  
-> → **Does explicit graph reasoning help?**  
-> → **Can graph information be made more selective before propagation?**
+### 6. Comparison Baselines
 
-This progression led to **GSF_GAP U-Net** as the main proposed architecture, while keeping baselines, design variants, and comparison methods clearly separated.
+Two additional baselines benchmark alternative context-modeling strategies:
+
+- **CWA U-Net** — image-space feature reweighting
+- **Non-local U-Net** — dense global attention without graph construction
+
+Together with U-Net and GCN U-Net, they provide controlled reference points for evaluating the proposed GSF models.
+
+---
+
+### Design Summary
+
+> **3D Feature Extraction → Graph Message Passing → Spectral Reweighting**
+
+The architecture progressively adds **3D context, explicit long-range dependencies, and frequency-aware graph feature selection** while keeping the shared segmentation backbone fixed.
 
 [Model Design Deep Dive →](docs/04_model_design.md)
 
