@@ -12,11 +12,11 @@
 
 | Workstream | Problem | What I Built | Outcome | Key Skills |
 |---|---|---|---|---|
-| **1. Problem Definition** | Coronary OCT calcification is difficult to segment because of low contrast, signal attenuation, artifacts, and highly variable lesion morphology | Framed the task as a **3D medical image segmentation problem** and identified key failure modes that should guide model design | Defined clear technical objectives for robustness, spatial-context modeling, and boundary delineation | Problem Framing, Medical Imaging, Segmentation |
-| **2. Data Preparation** | Clinical OCT data were large-scale, heterogeneous, and required patient-level organization before training | Structured **138 patients, 192 pullbacks, and 34,954 frames** into a consistent dataset with controlled train/validation/test organization | Created a reproducible dataset foundation for model development and fair comparison | Data Processing, Dataset Design, Data Validation |
-| **3. Preprocessing Pipeline** | Raw 2D OCT frames were not directly suitable for volumetric learning | Built an end-to-end pipeline for **polar transformation, artifact handling, signal enhancement, augmentation, and 3D volume construction** | Converted **704×704 frames into 256×256×8 model-ready volumes** with longitudinal context | Python, Image Processing, Data Pipeline, 3D Data |
-| **4. Model Design** | Standard 3D CNNs mainly capture local context and may underrepresent long-range structural relationships | Developed and compared **3D U-Net, attention, GCN, graph structural filtering, gated fusion, and non-local** architectures | Identified **GSF_GAP** as the strongest overall model with mean **3D Dice 0.834** | Deep Learning, 3D CNN, GNN, Architecture Design |
-| **5. Evaluation & Results** | Architecture improvements needed to be validated across repeated experiments rather than a single split | Designed repeated train/validation/test experiments with **Dice, Precision, Recall, IoU, paired t-tests, and Friedman testing** | Achieved best mean **Dice 0.834** and **IoU 0.703**, while quantifying precision–recall trade-offs across models | Experiment Design, Statistical Testing, Model Evaluation |
+| **1. Problem Definition** | Coronary OCT calcification is difficult to segment because of weak signals, artifacts, limited 2D context, and complex lesion boundaries | Translated imaging failure modes into clear requirements for **robustness, wider spatial context, and boundary quality** | Established the technical direction for the full ML pipeline | Problem Framing, Medical Imaging, Segmentation |
+| **2. Data Preparation** | Raw clinical OCT scans, metadata, and physician annotations were not directly usable for model training | Built a structured workflow to ingest **34,954 frames**, convert clinical annotations into pixel-level masks, and preserve pullback sequence information | Created a standardized segmentation dataset linking images, labels, metadata, and frame order | Data Engineering, DICOM, Annotation Processing, Dataset Design |
+| **3. Preprocessing Pipeline** | Standardized OCT frames still contained imaging noise, artifacts, signal loss, and limited longitudinal context | Built a domain-specific pipeline for **lumen noise removal, polar transformation, guidewire-shadow handling, signal enhancement, augmentation, and 3D VoI construction** | Converted raw **704×704 OCT frames into 256×256×8 model-ready 3D volumes** | Image Processing, MATLAB, Data Augmentation, 3D Data Pipeline |
+| **4. Model Design** | Standard 3D CNNs mainly capture local patterns and may miss wider structural relationships | Developed and compared **3D U-Net, attention, GCN, graph structural filtering, gated fusion, and non-local** architectures | Identified **GSF_GAP** as the strongest overall model with mean **3D Dice 0.834** | Deep Learning, 3D CNN, GNN, Architecture Design |
+| **5. Evaluation & Results** | Model improvements needed to be validated across full vessels and repeated experiments rather than individual VoIs or one favorable split | Reconstructed overlapping VoI predictions into full-vessel masks and evaluated models using **Dice, Precision, Recall, IoU, and statistical testing** | Achieved best mean **Dice 0.834** and **IoU 0.703**, while identifying precision–recall trade-offs across architectures | Experiment Design, Statistical Testing, Model Evaluation |
 
 ---
 
@@ -62,63 +62,96 @@ flowchart LR
 
 ---
 
-## P2 — Data
+## P2 — Data Preparation
 
-**Problem**  
-_TODO_
+**Problem Snapshot**
 
-**Solution**  
-_TODO_
+| Challenge | Why It Matters |
+|---|---|
+| **Raw clinical data** | 34,954 OCT frames came from 138 patients and 192 pullbacks, with separate image, metadata, and annotation sources |
+| **Clinical annotations** | Physician-defined coordinates were not directly usable as segmentation masks |
+| **Sequential structure** | Frame order within each pullback had to be preserved for later 3D modeling |
+
+**Engineering Response**
+
+| Decision | What I Built |
+|---|---|
+| **Structured ingestion** | Read OCT DICOM images and metadata and linked them by patient, pullback, and frame |
+| **Label construction** | Converted two-physician consensus annotations into pixel-level segmentation masks |
+| **Sequence preservation** | Maintained frame order and image-mask alignment to create standardized OCT sequences |
 
 **Technical Highlights**
-- _TODO_
-- _TODO_
-- _TODO_
+- Processed **34,954 OCT frames from 138 patients and 192 pullbacks**, including **26,648 calcified** and **8,306 non-calcified frames**.
+- Converted **two-physician consensus annotations** from coordinate-based clinical records into pixel-level segmentation masks for model training.
+- Preserved **frame order and pullback continuity** using OCT metadata, keeping the longitudinal structure required for later 3D modeling.
+- Standardized image-mask mapping and geometry across the dataset to create a consistent interface for the preprocessing pipeline.
 
 **Impact**
-- _TODO_
+- **Converted raw clinical OCT data into a structured, model-ready segmentation dataset**, creating a reliable data foundation for the later 3D preprocessing and model development pipeline.
 
 **Architecture / Workflow**
 
 ```mermaid
 flowchart LR
-    A["Clinical Pullbacks"] --> B["Patient / Pullback Organization"]
-    B --> C["Frame Extraction"]
-    C --> D["Annotation Alignment"]
-    D --> E["Dataset Split"]
-    E --> F["Model Dataset"]
+    A["Raw OCT DICOM"] --> C["Data Ingestion"]
+    B["Physician Annotations"] --> C
+
+    C --> D["Metadata & Frame Mapping"]
+    C --> E["Annotation-to-Mask Conversion"]
+
+    D --> F["Ordered Pullback Sequences"]
+    E --> G["Pixel-level Labels"]
+
+    F --> H["Standardized Segmentation Dataset"]
+    G --> H
+
+    H --> I["Preprocessing Pipeline"]
 ```
 
 [Deep Dive →](docs/02_data.md)
 
 ---
 
-## P3 — Pipeline
+## P3 — Preprocessing Pipeline
 
-**Problem**  
-_TODO_
+**Problem Snapshot**
 
-**Solution**  
-_TODO_
+| Challenge | Why It Matters |
+|---|---|
+| **Imaging noise & artifacts** | Lumen-region noise and guidewire shadows could introduce misleading features |
+| **Weak deep-tissue signals** | Calcification farther from the lumen can have lower contrast and unclear boundaries |
+| **OCT geometry** | Raw Cartesian images do not naturally represent the radial vessel-wall structure |
+| **Limited 2D context** | A single frame cannot capture lesion continuity along the vessel |
+
+**Engineering Response**
+
+| Decision | What I Built |
+|---|---|
+| **Clean the signal** | Removed lumen noise and guidewire-shadow regions |
+| **Normalize the geometry** | Converted Cartesian OCT frames to a 256×256 polar representation |
+| **Strengthen useful features** | Applied depth-aware enhancement and OCT-specific augmentation |
+| **Add longitudinal context** | Built overlapping 8-slice 3D VoIs with stride 3 |
 
 **Technical Highlights**
-- _TODO_
-- _TODO_
-- _TODO_
+- Combined **U-Net-based lumen segmentation and guidewire-shadow removal** to reduce OCT-specific imaging noise before model training.
+- Transformed raw OCT frames from **Cartesian to 256×256 polar coordinates**, aligning the representation with the radial structure of the vessel wall.
+- Applied **depth-aware signal enhancement and center-shift augmentation** to strengthen weak deep-tissue features and increase input variation.
+- Constructed overlapping **8-slice 3D VoIs with stride 3**, producing **256×256×8×1 inputs** that preserve longitudinal lesion context.
 
 **Impact**
-- _TODO_
+- **Converted standardized 2D OCT sequences into robust 3D model inputs**, reducing imaging noise while preserving vessel structure and longitudinal lesion information required for volumetric segmentation.
 
 **Architecture / Workflow**
 
 ```mermaid
 flowchart LR
-    A["Raw OCT Frames"] --> B["Preprocessing"]
-    B --> C["Polar Transformation"]
-    C --> D["Artifact / Signal Handling"]
-    D --> E["Augmentation"]
-    E --> F["3D Volume Construction"]
-    F --> G["Model-ready Input"]
+    A["Standardized OCT Sequences"] --> B["Lumen Noise Removal"]
+    B --> C["Cartesian → Polar"]
+    C --> D["Guidewire Shadow Removal"]
+    D --> E["Depth-aware Enhancement"]
+    E --> F["Center-shift Augmentation"]
+    F --> G["8-slice VoI Construction"]
+    G --> H["256×256×8×1 Model Input"]
 ```
 
 [Deep Dive →](docs/03_pipeline.md)
