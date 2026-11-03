@@ -82,12 +82,11 @@ flowchart LR
 
 **Technical Highlights**
 - Processed **34,954 OCT frames from 138 patients and 192 pullbacks**, including **26,648 calcified** and **8,306 non-calcified frames**.
-- Converted **two-physician consensus annotations** from coordinate-based clinical records into pixel-level segmentation masks for model training.
 - Preserved **frame order and pullback continuity** using OCT metadata, keeping the longitudinal structure required for later 3D modeling.
 - Standardized image-mask mapping and geometry across the dataset to create a consistent interface for the preprocessing pipeline.
 
 **Impact**
-- **Converted raw clinical OCT data into a structured, model-ready segmentation dataset**, creating a reliable data foundation for the later 3D preprocessing and model development pipeline.
+- **Established a structured, model-ready OCT dataset**, providing a reliable foundation for downstream preprocessing and 3D model development.
 
 **Architecture / Workflow**
 
@@ -139,19 +138,45 @@ flowchart LR
 - Constructed overlapping **8-slice 3D VoIs with stride 3**, producing **256×256×8×1 inputs** that preserve longitudinal lesion context.
 
 **Impact**
-- **Converted standardized 2D OCT sequences into robust 3D model inputs**, reducing imaging noise while preserving vessel structure and longitudinal lesion information required for volumetric segmentation.
+- **Built a robust 3D input pipeline for volumetric segmentation**, reducing OCT-specific noise while preserving vessel structure and longitudinal lesion context.
 
 **Architecture / Workflow**
 
 ```mermaid
 flowchart LR
-    A["Standardized OCT Sequences"] --> B["Lumen Noise Removal"]
-    B --> C["Cartesian → Polar"]
-    C --> D["Guidewire Shadow Removal"]
-    D --> E["Depth-aware Enhancement"]
-    E --> F["Center-shift Augmentation"]
-    F --> G["8-slice VoI Construction"]
-    G --> H["256×256×8×1 Model Input"]
+    A["Standardized OCT Sequences"]
+
+    subgraph S1["1. Clean"]
+        B["Lumen Noise Removal"]
+        C["Guidewire Shadow Removal"]
+    end
+
+    subgraph S2["2. Normalize"]
+        D["Cartesian → Polar"]
+        E["Resize to 256×256"]
+    end
+
+    subgraph S3["3. Enhance"]
+        F["Depth-aware Signal Enhancement"]
+        G["Center-shift Augmentation"]
+    end
+
+    subgraph S4["4. Build 3D Context"]
+        H["8-slice Sliding Window"]
+        I["Stride = 3"]
+    end
+
+    J["256×256×8×1 Model Input"]
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    G --> H
+    H --> I
+    I --> J
 ```
 
 [Deep Dive →](docs/03_pipeline.md)
