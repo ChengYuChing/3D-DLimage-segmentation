@@ -257,66 +257,34 @@ flowchart LR
 
 ## P5 — Model Validation & Results
 
-> **Validation Goal:** Build a controlled evaluation framework to determine whether graph modeling and Graph Structural Filtering provide measurable value beyond the 3D segmentation baseline.
+> **Validation Goal:** Determine whether graph modeling and Graph Structural Filtering add measurable value beyond the shared 3D segmentation backbone.
 
 ### Validation Framework
 
-| Design Choice | Implementation | Purpose |
+| Design | Implementation | Why It Matters |
 |---|---|---|
-| **Controlled comparison** | Same preprocessing, training conditions, and train/validation/test cases within each experiment | Keep data differences from driving model comparisons |
-| **Repeated testing** | 3 disjoint test sets · 45 / 43 / 46 vessels · 134 total | Reduce dependence on a single data split |
-| **Whole-vessel evaluation** | Reconstructed overlapping VoI predictions before scoring | Evaluate the final vessel-level segmentation rather than individual VoIs |
-| **Multi-metric analysis** | 3D Dice · Precision · Recall · IoU | Separate overall overlap from false-positive and false-negative behavior |
-
-### Validation Pipeline
-
-```mermaid
-flowchart LR
-    A["Controlled Data & Training Setup"]
-    B["3 Independent<br/>Test Experiments"]
-    C["Predict Overlapping<br/>3D VoIs"]
-    D["Reconstruct<br/>Whole Vessel"]
-    E["Evaluate<br/>Dice · Precision · Recall · IoU"]
-    F["Compare<br/>Architecture Decisions"]
-    G["Analyze<br/>Failure Modes"]
-
-    A --> B --> C --> D --> E --> F --> G
-```
-
-**Evaluation principle:** Model outputs were first mapped back to their original slice positions and overlapping probabilities were averaged before whole-vessel scoring. This prevents individual overlapping VoIs from being treated as independent evaluation cases.
+| **Controlled comparison** | Same preprocessing, training setup, and data splits | Isolate architecture changes |
+| **Repeated testing** | 3 disjoint test sets · 134 vessels | Reduce dependence on one split |
+| **Whole-vessel evaluation** | Reconstruct overlapping VoI predictions before scoring | Evaluate the final segmentation output |
+| **Multi-metric analysis** | Dice · Precision · Recall · IoU | Capture overlap and prediction trade-offs |
 
 ### Architecture Evidence
 
 | Architecture Step | Mean 3D Dice | Change |
 |---|---:|---:|
 | **3D U-Net** | 0.818 | Baseline |
-| **+ Graph Representation & Message Passing** | 0.823 | +0.005 |
-| **+ Graph Structural Filtering — GSF_GAP** | **0.834** | **+0.011 vs. GCN · +0.016 vs. U-Net** |
+| **+ Graph Modeling** | 0.823 | +0.005 |
+| **+ Graph Structural Filtering** | **0.834** | **+0.011 vs. GCN** |
 
-**Key finding:** The largest architecture-stage improvement appeared after adding **Graph Structural Filtering before message passing**, while graph modeling alone produced a smaller gain over the convolutional baseline.
+**Key finding:** The largest architecture-stage gain appeared after adding **Graph Structural Filtering before message passing**.
 
-### Prediction Behavior
+### Key Findings
 
-| Observation | Result | Engineering Interpretation |
-|---|---:|---|
-| **Best overall overlap** | GSF_GAP · **Dice 0.834 ± 0.033** | Best balance between lesion coverage and false-positive control |
-| **Highest Precision** | GSF_RMSP · **0.824 ± 0.032** | Magnitude-based frequency descriptors produced more conservative predictions |
-| **Highest Recall** | U-Net · **0.861 ± 0.029** | Broader lesion coverage came with more false positives |
-| **Soft gating** | Gated GSF_GAP · Dice 0.830 | Additional filtering increased Precision but did not improve mean Dice |
-
-### Reliability Check
-
-- Used **three mutually exclusive test sets** instead of reporting a single favorable split.
-- Compared all models on the **same cases within each experiment**.
-- Performed paired case-level comparisons across the **134 test vessels**.
-- Raw statistical comparisons were treated as **exploratory**, since 21 pairwise tests were performed without multiple-comparison correction.
-- Differences among the three GSF variants were not strong enough to support a clear statistical separation.
-
-### Impact
-
-- Built a **whole-vessel model validation pipeline** spanning repeated testing, reconstruction, multi-metric evaluation, and failure analysis.
-- GSF_GAP achieved the highest mean **3D Dice of 0.834**, improving by **0.016 over U-Net** and **0.011 over GCN U-Net**.
-- Identified how architecture changes affected not only leaderboard performance, but also **Precision–Recall behavior, cross-split consistency, and failure modes**.
+- **GSF_GAP** achieved the highest mean 3D Dice: **0.834 ± 0.033**.
+- **GSF_RMSP** achieved the highest Precision: **0.824 ± 0.032**, reflecting more conservative predictions.
+- **U-Net** achieved the highest Recall: **0.861 ± 0.029**, reflecting broader lesion coverage.
+- Repeated testing showed that single-split rankings could change, so model selection was based on **cross-test behavior rather than one favorable result**.
+- Paired comparisons were treated as **exploratory evidence** because multiple-comparison correction was not applied.
 
 [Model Validation & Results Deep Dive →](docs/05_experiments_results.md)
 
