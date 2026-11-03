@@ -1,4 +1,6 @@
-# 3D Deep Learning — Medical AI Image Segmentation
+# 3D Image Segmentation with Graph Structural Filtering
+
+**Project:** End-to-end ML pipeline for coronary OCT calcification segmentation.
 
 **Role:** ML/AI Engineer — 3D image segmentation, graph learning, and model validation.  
 **When:** Jan. 2025 – Jun. 2026 · **Location:** Taipei, Taiwan  
@@ -61,9 +63,9 @@ flowchart TB
 
 ---
 
-# Project Details
+## Project Details
 
-## P1 — Problem Definition
+### P1 — Problem Definition
 
 > **Key question:** What must the ML system handle to segment calcification reliably?
 
@@ -79,7 +81,7 @@ flowchart TB
 
 ---
 
-## P2 — Data Preparation
+### P2 — Data Preparation
 
 > **Key question:** How do we turn disconnected images, metadata, and labels into a reliable dataset for 3D modeling?
 
@@ -97,7 +99,7 @@ flowchart TB
 
 ---
 
-## P3 — Preprocessing Pipeline
+### P3 — Preprocessing Pipeline
 
 > **Key question:** How do we convert ordered 2D sequences into robust, context-aware 3D inputs?
 
@@ -118,11 +120,11 @@ flowchart TB
 
 ---
 
-## P4 — Model Design
+### P4 — Model Design
 
 > **Key question:** Does explicit graph modeling — and then Graph Structural Filtering — add value beyond the shared 3D CNN backbone?
 
-### Architecture Evolution
+#### Architecture Evolution
 
 ```mermaid
 flowchart LR
@@ -157,11 +159,11 @@ flowchart LR
 
 ---
 
-## P5 — Model Validation & Results
+### P5 — Model Validation & Results
 
 > **Key question:** Do the architecture changes produce repeatable gains under the same data and evaluation setup?
 
-### Validation Framework
+#### Validation Framework
 
 | Design | Implementation | Why It Matters |
 |---|---|---|
@@ -170,7 +172,7 @@ flowchart LR
 | **Vessel-level evaluation** | Aggregate overlapping VoI predictions before scoring | Evaluate the final output |
 | **Multi-metric analysis** | Dice · Precision · Recall · IoU | Capture overlap and error trade-offs |
 
-### Architecture Evidence
+#### Architecture Evidence
 
 | Architecture Step | Mean 3D Dice | Change |
 |---|---:|---:|
