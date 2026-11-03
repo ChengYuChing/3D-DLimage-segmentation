@@ -2,6 +2,8 @@
 
 [← Model Design Hub](../04_model_design.md)
 
+> **Goal:** Select and freeze a stable 3D backbone before testing graph-specific components.
+
 The shared backbone was selected **before** introducing graph modules so downstream comparisons could focus on GCN and GSF design changes rather than changes to the underlying encoder-decoder.
 
 ## 1. Backbone Configuration Selection
@@ -116,7 +118,7 @@ This creates a controlled architecture progression instead of comparing unrelate
 
 ---
 
-## Engineering Takeaways
+## Key Takeaways
 
 - Selected the backbone on a **separate configuration-selection split** before final model evaluation.
 - Increased input depth from **5 to 8 slices** to expose the model to longer longitudinal context.
